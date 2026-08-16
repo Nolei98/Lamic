@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laboratório LAMIC — Análises Clínicas e Vacinas no Cariri</title>
+<meta name="description" content="Há mais de 43 anos cuidando da saúde do Cariri. 1.582 exames, sala de vacinas e 12 unidades de coleta. Agende pelo WhatsApp.">
+<link rel="stylesheet" href="assets/estilo.css">
+</head>
+<body class="carregando">
+
+<div id="carregando" role="status" aria-live="polite" aria-label="Carregando o site do LAMIC">
+  <div class="interno">
+    <span class="anel" aria-hidden="true">
+      <svg viewBox="0 0 78 78"><circle class="base" cx="39" cy="39" r="37"/><circle cx="39" cy="39" r="37"/></svg>
+      <span class="pulso"></span>
+    </span>
+    <span class="nome"><b>Lamic</b><i>.</i><i>.</i><i>.</i></span>
+    <span class="rotulo">carregando</span>
+    <span class="barra" aria-hidden="true"><span></span></span>
+  </div>
+</div>
+<noscript><style>#carregando{display:none}body.carregando{overflow:auto}</style></noscript>
+
+<header class="rail" id="rail">
+  <a class="marca" href="index.html" aria-label="Laboratório LAMIC — página inicial">
+    <span><b>LAMIC</b><s>Laboratório</s></span>
+  </a>
+  <nav aria-label="Menu principal">
+    <a href="index.html" aria-current="page" data-spy="topo">Home</a>
+    <a href="sobre.html" data-spy="sobre">Sobre</a>
+    <a href="exames.html" data-spy="servicos">Exames</a>
+    <a href="vacinas.html" >Vacinas</a>
+    <a href="convenios.html" data-spy="convenios">Convênios</a>
+    <a href="unidades.html" data-spy="contato">Unidades</a>
+    <a href="https://lamicvivamais.com.br/" target="_blank" rel="noopener noreferrer">Viva+</a>
+  </nav>
+  <button class="abrir-menu" id="btnMenu" aria-expanded="false" aria-label="Abrir menu">
+    <svg width="20" height="14" viewBox="0 0 20 14" fill="none"><path d="M0 1h20M0 7h20M0 13h20" stroke="currentColor" stroke-width="1.8"/></svg>
+  </button>
+</header>
+
+<div class="topo">
+  <a class="btn-res" href="https://www.laboratoriolamic.uniexames.com.br/logins/login" target="_blank" rel="noopener noreferrer"><svg class="cad" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>Resultados</span></a>
+  <a class="soc" href="https://instagram.com/laboratoriolamic" target="_blank" rel="noopener noreferrer" aria-label="Instagram do LAMIC">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+  </a>
+  <a class="soc" href="https://api.whatsapp.com/send?phone=5588988340130" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp do LAMIC">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.5 15.2L2 22l4.9-1.4A10 10 0 1 0 12 2Zm5.2 14c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1-.9-.3-2.2-.8-3.6-2.3-1.5-1.5-2-2.9-2.2-3.6-.2-.7-.1-1.4.2-1.8.2-.3.6-.6.9-.7.2 0 .4-.1.6 0 .2 0 .3 0 .4.3l.7 1.6c.1.2 0 .4-.1.5l-.4.5c-.1.2-.2.3 0 .6.3.5.7 1 1.2 1.4.5.5 1.1.8 1.5 1 .2.1.4.1.5-.1l.5-.6c.1-.2.3-.2.5-.1l1.6.8c.2.1.3.2.3.4 0 .2 0 .8-.2 1.1Z"/></svg>
+  </a>
+</div>
+
+<button class="bot" id="bot" aria-expanded="false" aria-controls="botPainel" aria-label="Abrir a conversa com a Livia, assistente virtual do LAMIC">
+  <span class="sino" aria-hidden="true"></span>
+  <svg width="30" height="30" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+    <path class="antena" d="M16 3v4" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+    <circle class="antena" cx="16" cy="2.6" r="2" fill="#fff"/>
+    <rect x="5" y="8" width="22" height="16" rx="6" fill="#fff"/>
+    <circle cx="12" cy="15" r="2.2" fill="#123C74"/>
+    <circle cx="20" cy="15" r="2.2" fill="#123C74"/>
+    <path d="M12 19.5h8" stroke="#123C74" stroke-width="2" stroke-linecap="round"/>
+    <path d="M3 13v6M29 13v6" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+    <path d="M11 24v4h10v-4" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+  </svg>
+</button>
+<div class="bot-painel" id="botPainel" role="dialog" aria-label="Conversa com a Livia, assistente virtual do LAMIC">
+  <div class="cabeca">
+    <span class="av" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><rect x="5" y="8" width="22" height="16" rx="6" fill="#fff"/><circle cx="12" cy="15" r="2.2" fill="#123C74"/><circle cx="20" cy="15" r="2.2" fill="#123C74"/><path d="M12 19.5h8" stroke="#123C74" stroke-width="2" stroke-linecap="round"/><path d="M16 3v4" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="2.6" r="2" fill="#fff"/></svg>
+    </span>
+    <span><b>Livia</b><span class="stt">assistente virtual · online 24h</span></span>
+    <button class="fechar" type="button" aria-label="Fechar assistente">
+      <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 1l10 10M11 1L1 11"/></svg>
+    </button>
+  </div>
+  <div class="corpo livia">
+    <div class="livia-frame">
+      <iframe id="liviaFrame" data-src="https://livia.app.online24por7.ai" title="Conversa com a Livia, assistente virtual do LAMIC" allow="microphone; clipboard-write; autoplay" referrerpolicy="strict-origin-when-cross-origin" loading="lazy"></iframe>
+      <div class="livia-carregando" id="liviaCarregando">
+        <span class="anelzinho" aria-hidden="true"></span>
+        Abrindo a conversa com a Livia…
+      </div>
+      <div class="livia-alt" id="liviaAlt">
+        <b>Conversar com a Livia</b>
+        <span>A assistente atende 24h e responde sobre exames, preparo, vacinas e unidades.</span>
+        <a class="btn" href="https://livia.app.online24por7.ai" target="_blank" rel="noopener noreferrer">Abrir a conversa
+<i><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M1 11L11 1M4 1h7v7"/></svg></i></a>
+      </div>
+    </div>
+    <div class="livia-pe">
+      <a href="https://livia.app.online24por7.ai" target="_blank" rel="noopener noreferrer">Abrir em tela cheia ↗</a>
+      <a href="https://api.whatsapp.com/send?phone=5588988340130" target="_blank" rel="noopener noreferrer">Falar com atendente</a>
+    </div>
+  </div>
+  <p class="rodinha">Conversa com a assistente virtual. Não envie senhas nem dados de saúde sensíveis por aqui.</p>
+</div>
+
+<button class="subir" id="subir" type="button" aria-label="Voltar ao topo da página">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M8 13V3M3 8l5-5 5 5"/></svg>
+</button>
+
+<main id="topo">
+<main id="topo">
+<section class="hero" aria-label="Destaques" aria-roledescription="carrossel">
+  <div class="slides" id="slides">
+
+    <div class="slide on" role="group" aria-roledescription="slide" aria-label="1 de 3">
+      <div class="ph">
+        <img src="img/hero-1.jpg" alt="Profissional do LAMIC realizando coleta de sangue em paciente" onerror="this.closest('.ph').classList.add('sem-img')">
+        <div class="slot"><span>
+          <svg class="ic" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M3 17l5-4 4 3 3-2 6 4"/></svg>
+          <b>Slide 1 · Coleta</b><span>img/hero-1.jpg · 1920×1080</span>
+        </span></div>
+      </div>
+      <div class="hero-txt">
+        <div class="eyebrow">
+          <svg width="16" height="15" viewBox="0 0 24 22" fill="currentColor"><path d="M12 21S2 14.6 2 8.4A5.4 5.4 0 0 1 12 5a5.4 5.4 0 0 1 10 3.4C22 14.6 12 21 12 21Z"/></svg>
+          Cuidado e precisão
+        </div>
+        <h1>Sua saúde <em>em boas mãos</em></h1>
+        <p>Há mais de 43 anos o LAMIC entrega resultados confiáveis para o Cariri, com mais de 1.500 exames disponíveis e 12 unidades de coleta.</p>
+        <div class="hero-acoes">
+          <a class="btn" href="exames.html">Buscar meu exame <i><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M1 11L11 1M4 1h7v7"/></svg></i></a>
+          <a class="btn vazio" href="https://api.whatsapp.com/send?phone=5588988340130" target="_blank" rel="noopener noreferrer">Agendar pelo WhatsApp</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide" role="group" aria-roledescription="slide" aria-label="2 de 3">
+      <div class="ph">
+        <img src="img/hero-2.jpg" alt="Enfermeira aplicando vacina em criança acompanhada da mãe" onerror="this.closest('.ph').classList.add('sem-img')">
+        <div class="slot"><span>
+          <svg class="ic" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 2l4 4M17 7l-9 9-3 1 1-3 9-9z"/><path d="M14 5l5 5"/></svg>
+          <b>Slide 2 · Vacinas</b><span>img/hero-2.jpg · 1920×1080</span>
+        </span></div>
+      </div>
+      <div class="hero-txt">
+        <div class="eyebrow">
+          <svg width="16" height="15" viewBox="0 0 24 22" fill="currentColor"><path d="M12 21S2 14.6 2 8.4A5.4 5.4 0 0 1 12 5a5.4 5.4 0 0 1 10 3.4C22 14.6 12 21 12 21Z"/></svg>
+          Sala de vacinas
+        </div>
+        <h1>Proteção para <em>toda a família</em></h1>
+        <p>25 vacinas disponíveis, do bebê ao idoso, com tecnologias de conforto que reduzem a dor da aplicação: Buzzy®, PIKLUC e óculos de realidade virtual.</p>
+        <div class="hero-acoes">
+          <a class="btn" href="vacinas.html">Ver calendário de vacinas <i><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M1 11L11 1M4 1h7v7"/></svg></i></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide" role="group" aria-roledescription="slide" aria-label="3 de 3">
+      <div class="ph">
+        <img src="img/hero-3.jpg" alt="Laboratório de análises clínicas do LAMIC com equipamentos automatizados" onerror="this.closest('.ph').classList.add('sem-img')">
+        <div class="slot"><span>
+          <svg class="ic" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2h6M10 2v7L5 19a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-10V2"/><path d="M7.5 14h9"/></svg>
+          <b>Slide 3 · Laboratório</b><span>img/hero-3.jpg · 1920×1080</span>
+        </span></div>
+      </div>
+      <div class="hero-txt">
+        <div class="eyebrow">
+          <svg width="16" height="15" viewBox="0 0 24 22" fill="currentColor"><path d="M12 21S2 14.6 2 8.4A5.4 5.4 0 0 1 12 5a5.4 5.4 0 0 1 10 3.4C22 14.6 12 21 12 21Z"/></svg>
+          Tecnologia e rigor técnico
+        </div>
+        <h1>Resultado online, <em>quando precisar</em></h1>
+        <p>Acesse seus laudos pelo portal do paciente, a qualquer hora. Também disponível para médicos solicitantes, convênios e empresas.</p>
+        <div class="hero-acoes">
+          <a class="btn" href="https://www.laboratoriolamic.uniexames.com.br/logins/login" target="_blank" rel="noopener noreferrer">Acessar resultados <i><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M1 11L11 1M4 1h7v7"/></svg></i></a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="controles">
+    <div class="dots" id="dots" role="tablist" aria-label="Escolher slide"></div>
+    <div class="setas">
+      <button id="ant" aria-label="Slide anterior"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 2 4 8l6 6"/></svg></button>
+      <button id="prox" aria-label="Próximo slide"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2l6 6-6 6"/></svg></button>
+    </div>
+  </div>
+
+  <a class="bola" href="https://lamicvivamais.com.br/" target="_blank" rel="noopener noreferrer" aria-label="Conheça o cartão LAMIC VIVA+">
+    <span>
+      <span class="cartao" aria-hidden="true">
+        <u>LAMIC</u><s>VIVA+</s>
+        <span class="tarja"></span><span class="tarja"></span>
+      </span>
+      <b>Cartão<br>LAMIC VIVA+</b>
+      <span>Conheça →</span>
+    </span>
+  </a>
+</section>
+
+<div class="busca">
+  <form id="buscaHome" role="search">
+    <input type="search" placeholder="Digite o nome do exame, sigla ou nome popular…" aria-label="Buscar exame">
+    <button class="btn" type="submit">Buscar</button>
+  </form>
+  <small>1.582 exames cadastrados · busca sem acento e tolerante a erro de digitação</small>
+</div>
+
+<section class="sec" id="servicos" aria-labelledby="tSer">
+  <div class="wrap">
+    <div class="cab">
+      <div class="eyebrow ctr">
+        <svg width="16" height="15" viewBox="0 0 24 22" fill="currentColor"><path d="M12 21S2 14.6 2 8.4A5.4 5.4 0 0 1 12 5a5.4 5.4 0 0 1 10 3.4C22 14.6 12 21 12 21Z"/></svg>
+        O que oferecemos
+      </div>
+      <h2 id="tSer">Serviços sob medida para o seu cuidado</h2>
+      <p>Da coleta simples ao acompanhamento contínuo — tudo em um só lugar, com atendimento humano e resultado no prazo.</p>
+    </div>
+
+    <div class="servicos">
+      <a class="card" href="exames.html">
+        <h3>Análises<em>Clínicas</em></h3>
+        <p>Mais de 1.500 exames, de rotina a alta complexidade. Consulte o preparo antes de vir.</p>
+        <div class="foto">
+          <div class="ph">
+            <img src="img/servico-exames.jpg" alt="Tubos de coleta em laboratório" onerror="this.closest('.ph').classList.add('sem-img')">
+            <div class="slot"><span><b>Foto</b><span>img/servico-exames.jpg</span></span></div>
+          </div>
+          <span class="seta"><svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M1 11L11 1M4 1h7v7"/></svg></span>
+        </div>
+      </a>
+
+      <a class="card" href="vacinas.html">
+        <h3>Sala de<em>Vacinas</em></h3>
+        <p>25 vacinas do bebê ao idoso, com tecnologias que reduzem a dor da picada.</p>
+        <div class="foto">
+          <div class="ph">
+            <img src="img/servico-vacinas.jpg" alt="Aplicação de vacina em paciente" onerror="this.closest('.ph').classList.add('sem-img')">
+            <div class="slot"><span><b>Foto</b><span>img/servico-vacinas.jpg</span></span></div>
+          </div>
+          <span class="seta"><svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M1 11L11 1M4 1h7v7"/></svg></span>
+        </div>
+      </a>
+
+      <a class="card" href="unidades.html">
+        <h3>Coleta<em>Domiciliar</em></h3>
+        <p>Nossa equipe vai até você. Ideal para idosos, crianças e pacientes acamados.</p>
+        <div class="foto">
+          <div class="ph">
+            <img src="img/servico-domiciliar.jpg" alt="Coleta domiciliar realizada por profissional de saúde" onerror="this.closest('.ph').classList.add('sem-img')">
+            <div class="slot"><span><b>Foto</b><span>img/servico-domiciliar.jpg</span></span></div>
+          </div>
+          <span class="seta"><svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M1 11L11 1M4 1h7v7"/></svg></span>
+        </div>
+      </a>
+
+      <a class="card escuro" href="convenios.html">
+        <h3>Empresas e<em>Convênios</em></h3>
+        <p>Exames ocupacionais, check-up corporativo e atendimento aos principais planos.</p>
+        <div class="foto">
+          <div class="ph">
+            <img src="img/servico-empresas.jpg" alt="Equipe do LAMIC em atendimento" onerror="this.closest('.ph').classList.add('sem-img')">
+            <div class="slot"><span><b>Foto</b><span>img/servico-empresas.jpg</span></span></div>
+          </div>
+          <span class="seta"><svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M1 11L11 1M4 1h7v7"/></svg></span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="faixa" id="sobre" aria-labelledby="tSobre">
+  <div class="wrap">
+    <div class="grid">
+      <div>
+        <div class="eyebrow">
+          <svg width="16" height="15" viewBox="0 0 24 22" fill="currentColor"><path d="M12 21S2 14.6 2 8.4A5.4 5.4 0 0 1 12 5a5.4 5.4 0 0 1 10 3.4C22 14.6 12 21 12 21Z"/></svg>
+          Cuidado de verdade com
+        </div>
+        <h2 id="tSobre">LAMIC<em>Laboratório de Análises Clínicas</em></h2>
+        <p>Referência em diagnóstico no Cariri, o LAMIC une rigor técnico e atendimento acolhedor. São mais de quatro décadas ao lado das famílias da região, com estrutura própria, equipe qualificada e controle de qualidade em todas as etapas.</p>
+        <p>Do agendamento ao laudo, cada passo é pensado para dar tranquilidade a quem confia sua saúde a nós.</p>
+        <div class="nums">
+          <div><b>43</b><span>anos de história</span></div>
+          <div><b>12</b><span>unidades de coleta</span></div>
+          <div><b>1.582</b><span>exames no catálogo</span></div>
+          <div><b>25</b><span>vacinas disponíveis</span></div>
+        </div>
+      </div>
+      <div class="foto">
+        <div class="ph">
+          <img src="img/sobre.jpg" alt="Equipe do Laboratório LAMIC" onerror="this.closest('.ph').classList.add('sem-img')">
+          <div class="slot"><span><b>Foto institucional</b><span>img/sobre.jpg · 1200×930</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="missao" aria-labelledby="tMissao">
+  <div class="wrap">
+    <div class="grid">
+      <div class="painel">
+        <h3>Agende sua<em>Coleta</em></h3>
+        <p>Atendimento por WhatsApp em todas as 12 unidades, sem fila e sem espera no telefone.</p>
+        <div class="foto">
+          <div class="ph">
+            <img src="img/agendamento.jpg" alt="Recepção de unidade do LAMIC" onerror="this.closest('.ph').classList.add('sem-img')">
+            <div class="slot"><span><b>Foto</b><span>img/agendamento.jpg</span></span></div>
+          </div>
+          <a class="seta" href="https://api.whatsapp.com/send?phone=5588988340130" target="_blank" rel="noopener noreferrer" aria-label="Agendar pelo WhatsApp">
+            <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M1 11L11 1M4 1h7v7"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="corpo">
+        <div class="eyebrow">
+          <svg width="16" height="15" viewBox="0 0 24 22" fill="currentColor"><path d="M12 21S2 14.6 2 8.4A5.4 5.4 0 0 1 12 5a5.4 5.4 0 0 1 10 3.4C22 14.6 12 21 12 21Z"/></svg>
+          Nosso compromisso
+        </div>
+        <h2 id="tMissao">Nossa Missão</h2>
+        <p>Oferecer diagnóstico laboratorial confiável e acessível, com tecnologia atualizada e atendimento que respeita o tempo e a dignidade de cada paciente.</p>
+        <p>Acreditamos que exame não é só número: é informação que orienta decisões importantes. Por isso investimos em controle de qualidade, prazos claros e uma equipe que explica, escuta e acolhe.</p>
+        <a class="btn" href="sobre.html">Saiba mais sobre nós <i><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M1 11L11 1M4 1h7v7"/></svg></i></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec sec-creme" id="convenios" aria-labelledby="tConv">
+  <div class="wrap">
+    <div class="cab">
+      <div class="eyebrow ctr">
+        <svg width="16" height="15" viewBox="0 0 24 22" fill="currentColor"><path d="M12 21S2 14.6 2 8.4A5.4 5.4 0 0 1 12 5a5.4 5.4 0 0 1 10 3.4C22 14.6 12 21 12 21Z"/></svg>
+        Atendemos
+      </div>
+      <h2 id="tConv">Planos de saúde e cartões de desconto</h2>
+      <p>Confirme a cobertura do seu plano no WhatsApp da unidade antes de agendar.</p>
+    </div>
+    <div class="logos">
+      <div>Bradesco Saúde</div><div>Camed Saúde</div><div>Amil</div><div>Cafaz</div>
+      <div>Fachefs</div><div>Hapvida</div><div>Assefaz</div>
+      <div>LAMIC VIVA+</div><div>Afagu</div><div>Plano Funerário Vida</div>
+    </div>
+  </div>
+</section>
+
+<section class="form-sec" aria-labelledby="tMsg">
+  <div class="wrap">
+    <div class="cab">
+      <div class="eyebrow ctr">
+        <svg width="16" height="15" viewBox="0 0 24 22" fill="currentColor"><path d="M12 21S2 14.6 2 8.4A5.4 5.4 0 0 1 12 5a5.4 5.4 0 0 1 10 3.4C22 14.6 12 21 12 21Z"/></svg>
+        Precisa de ajuda?
+      </div>
+      <h2 id="tMsg">Envie sua mensagem</h2>
+      <p>Dúvidas sobre preparo de exame, convênios ou vacinas. Respondemos em horário comercial.</p>
+    </div>
+    <form data-sem-backend>
+      <div class="linha">
+        <input type="text" placeholder="Nome completo" aria-label="Nome completo" required>
+        <input type="tel" placeholder="WhatsApp com DDD" aria-label="WhatsApp com DDD" required>
+        <textarea rows="1" placeholder="Como podemos ajudar?" aria-label="Mensagem" required></textarea>
+      </div>
+      <div class="form-rod">
+        <label><input type="checkbox" required> Autorizo o contato do LAMIC e concordo com a Política de Privacidade. Não envie dados de saúde por este formulário.</label>
+        <button class="btn" type="submit">Enviar <i><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M1 11L11 1M4 1h7v7"/></svg></i></button>
+      </div>
+    </form>
+      <p class="retorno" style="display:none;margin-top:16px;font-size:13.5px;color:#6B5426;background:#FFF8E8;border:1px solid #F2DFB4;border-radius:12px;padding:14px 18px"></p>
+  </div>
+</section>
+</main>
+
+</main>
+
+<footer class="rodape" id="contato">
+  <svg class="onda" viewBox="0 0 1440 110" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 110V44c180-52 420 34 720 12S1260-8 1440 30v80z" fill="#FBFCFE"/>
+  </svg>
+  <div class="wrap">
+    <div class="grid">
+      <div>
+        <div class="eyebrow"><svg width="16" height="15" viewBox="0 0 24 22" fill="currentColor"><path d="M12 21S2 14.6 2 8.4A5.4 5.4 0 0 1 12 5a5.4 5.4 0 0 1 10 3.4C22 14.6 12 21 12 21Z"/></svg> Fale com a gente</div>
+        <h2>Informações<em>de Contato</em></h2>
+        <div class="info">
+          <b>Unidade Central — NTO</b><br>
+          R. Padre Cícero, 759 — Centro<br>
+          Juazeiro do Norte — CE, 63010-020<br>
+          Telefone: <a href="tel:+558835115203"><b>(88) 3511-5203</b></a><br>
+          WhatsApp: <a href="https://api.whatsapp.com/send?phone=5588988340130" target="_blank" rel="noopener noreferrer"><b>(88) 9.8834-0130</b></a>
+        </div>
+      </div>
+      <div>
+        <h4>Navegação</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="sobre.html">Sobre</a></li>
+          <li><a href="exames.html">Exames</a></li>
+          <li><a href="vacinas.html">Vacinas</a></li>
+          <li><a href="convenios.html">Convênios</a></li>
+          <li><a href="unidades.html">Unidades</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Serviços</h4>
+        <ul>
+          <li><a href="https://www.laboratoriolamic.uniexames.com.br/logins/login" target="_blank" rel="noopener noreferrer">Resultados online</a></li>
+          <li><a href="https://lamicvivamais.com.br/" target="_blank" rel="noopener noreferrer">Cartão LAMIC VIVA+</a></li>
+          <li><a href="exames.html">Preparo de exames</a></li>
+          <li><a href="https://api.whatsapp.com/send?phone=5588988340130" target="_blank" rel="noopener noreferrer">Agendar coleta</a></li>
+          <li><a href="https://instagram.com/laboratoriolamic" target="_blank" rel="noopener noreferrer">Instagram</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="mapa">
+          <iframe src="https://www.google.com/maps?q=R.+Padre+C%C3%ADcero,+759+-+Centro,+Juazeiro+do+Norte+-+CE,+63010-020&hl=pt-BR&z=16&output=embed" title="Mapa da Unidade Central do LAMIC — R. Padre Cícero, 759 - Centro, Juazeiro do Norte - CE, 63010-020" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+        <p style="margin-top:12px;font-size:12.5px"><a href="https://www.google.com/maps/search/?api=1&amp;query=R.+Padre+C%C3%ADcero,+759,+Juazeiro+do+Norte+-+CE" target="_blank" rel="noopener noreferrer">Abrir no Google Maps ↗</a></p>
+      </div>
+    </div>
+    <div class="legal">
+      <span>© 2026 Laboratório LAMIC — Análises Clínicas. Todos os direitos reservados.</span>
+      <span><a href="https://laboratoriolamic.com.br/privacy-policy/" target="_blank" rel="noopener noreferrer">Política de Privacidade</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
