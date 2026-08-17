@@ -195,6 +195,12 @@ th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx
 .vitrine-wrap{position:relative;width:100%;overflow:hidden;background:#000;margin:0 auto}
 .vitrine-slide{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .5s ease}
 .vitrine-slide.on{opacity:1;pointer-events:auto}
+/* No modo embutido (fill), o .vitrine-wrap ocupa 100% da largura do iframe
+   pra o fundo (cor/imagem) sempre preencher a tela toda, mesmo em telas
+   maiores que o design nativo do banner (1200/1240px). As camadas, porém,
+   continuam posicionadas dentro dessa faixa de largura fixa, centralizada —
+   é só o fundo que estica. */
+.vitrine-conteudo{position:absolute;inset:0 auto 0 50%}
 .vitrine-layer{position:absolute}
 .vitrine-layer img{width:100%;height:100%;object-fit:contain;display:block}
 

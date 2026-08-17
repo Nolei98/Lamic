@@ -42,6 +42,7 @@ function SlideContent({
   deviceRatio,
   yOffset,
   animKey,
+  contentWidth,
 }: {
   slide: Slide;
   scale: number;
@@ -49,13 +50,20 @@ function SlideContent({
   deviceRatio: number;
   yOffset: number;
   animKey: number;
+  contentWidth: number;
 }) {
   return (
     <>
+      {/* Fundo: sempre no inset:0 do slide (que ocupa 100% do .vitrine-wrap no
+          modo embutido) — é isso que faz ele preencher a tela toda mesmo em
+          monitores mais largos que o desenho nativo do banner. */}
       {slide.background?.type === "color" && <div style={{ position: "absolute", inset: 0, background: slide.background.value }} />}
       {slide.background?.type === "image" && (
         <img src={slide.background.value} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
       )}
+      {/* Camadas: continuam dentro da faixa de largura fixa do design
+          (contentWidth), centralizada — só o fundo estica, o conteúdo não. */}
+      <div className="vitrine-conteudo" style={{ width: contentWidth, transform: "translateX(-50%)" }}>
       {slide.layers.map((l) => {
         const r = resolveLayerForDevice(l, l.responsive, device, deviceRatio, yOffset);
         if (r.hidden) return null;
@@ -122,6 +130,7 @@ function SlideContent({
           </div>
         );
       })}
+      </div>
     </>
   );
 }
@@ -180,11 +189,16 @@ export function Player({ project, fill = false }: { project: Project; fill?: boo
     goTo((index - 1 + project.slides.length) % project.slides.length);
   }
 
+  const contentWidth = canvasSize.width * scale;
+
   return (
     <div
       ref={wrapRef}
       className="vitrine-wrap"
-      style={{ width: canvasSize.width * scale, height: canvasSize.height * scale, borderRadius: fill ? 0 : 12 }}
+      // No modo embutido (fill), a largura vem 100% do iframe — é o fundo
+      // que preenche a tela toda. Fora do embed (prévia isolada), o quadro
+      // continua no tamanho fixo de sempre.
+      style={{ width: fill ? "100%" : contentWidth, height: canvasSize.height * scale, borderRadius: fill ? 0 : 12 }}
     >
       {/* Todos os slides ficam empilhados no DOM; a troca é só a opacidade —
           é isso que faz o fade suave de um pro outro (ver .vitrine-slide no globals.css). */}
@@ -197,6 +211,7 @@ export function Player({ project, fill = false }: { project: Project; fill?: boo
             deviceRatio={deviceScaleRatio(device, project.width)}
             yOffset={deviceYOffset(device, project.width, project.height)}
             animKey={i === index ? key : -1}
+            contentWidth={contentWidth}
           />
         </div>
       ))}
