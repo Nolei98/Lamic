@@ -207,6 +207,7 @@ export function Editor({ project }: { project: Project }) {
   const [avisoImagem, setAvisoImagem] = useState<string | null>(null);
   const [bgNatural, setBgNatural] = useState<{ w: number; h: number } | null>(null);
   const [salvandoManual, setSalvandoManual] = useState(false);
+  const [erroSalvar, setErroSalvar] = useState<string | null>(null);
   const [playIndex, setPlayIndex] = useState(0);
   const [salvando, startTransition] = useTransition();
   const dragState = useRef<{
@@ -315,16 +316,30 @@ export function Editor({ project }: { project: Project }) {
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [dirty]);
 
+  // Usa allSettled (em vez de Promise.all) de propósito: antes, se UM item
+  // do lote falhasse (ex.: referenciar um slide/camada apagado — o que
+  // pode acontecer se a página ficou aberta numa aba antiga enquanto o
+  // projeto mudou por outro lado), o Promise.all rejeitava tudo de uma vez
+  // e o erro não aparecia em lugar nenhum: o botão só parava de dizer
+  // "Salvando…" e nada mais — parecia que tinha salvo, mas nada persistiu.
+  // Agora cada item roda independente, os que derem certo persistem mesmo
+  // assim, e qualquer falha aparece num aviso explícito (com o que exatamente
+  // não salvou) em vez de sumir sem explicação.
   async function salvarTudo() {
     setSalvandoManual(true);
+    setErroSalvar(null);
     try {
-      const chamadas: Promise<unknown>[] = [];
+      const chamadas: { label: string; promise: Promise<unknown> }[] = [];
       for (const s of slides) {
-        chamadas.push(updateSlideBackgroundAction(project.id, s.id, s.background || { type: "color", value: "#0E2E5A" }));
-        chamadas.push(updateSlideDurationAction(project.id, s.id, s.duration));
+        chamadas.push({
+          label: `fundo do slide ${s.id}`,
+          promise: updateSlideBackgroundAction(project.id, s.id, s.background || { type: "color", value: "#0E2E5A" }),
+        });
+        chamadas.push({ label: `duração do slide ${s.id}`, promise: updateSlideDurationAction(project.id, s.id, s.duration) });
         for (const l of s.layers) {
-          chamadas.push(
-            updateLayerAction(project.id, l.id, {
+          chamadas.push({
+            label: `camada ${l.type} (${l.id})`,
+            promise: updateLayerAction(project.id, l.id, {
               x: l.x,
               y: l.y,
               width: l.width,
@@ -335,15 +350,33 @@ export function Editor({ project }: { project: Project }) {
               delayMs: l.delayMs,
               durationMs: l.durationMs,
               content: l.content,
-            })
-          );
+            }),
+          });
           for (const dev of ["tablet", "mobile"] as const) {
-            if (l.responsive[dev]) chamadas.push(updateLayerResponsiveAction(project.id, l.id, dev, l.responsive[dev]!));
+            if (l.responsive[dev]) {
+              chamadas.push({
+                label: `ajuste responsivo (${dev}) da camada ${l.id}`,
+                promise: updateLayerResponsiveAction(project.id, l.id, dev, l.responsive[dev]!),
+              });
+            }
           }
         }
       }
-      await Promise.all(chamadas);
-      setDirty(false);
+      const resultados = await Promise.allSettled(chamadas.map((c) => c.promise));
+      const falhas = resultados
+        .map((r, i) => (r.status === "rejected" ? chamadas[i].label : null))
+        .filter((x): x is string => x !== null);
+      if (falhas.length > 0) {
+        setErroSalvar(
+          `${falhas.length} item(ns) não salvaram: ${falhas.slice(0, 5).join(", ")}${falhas.length > 5 ? "…" : ""}. ` +
+            `Recarregue a página pra ver o estado real antes de continuar editando.`
+        );
+        // dirty continua true de propósito — ainda há alteração não salva.
+      } else {
+        setDirty(false);
+      }
+    } catch (e) {
+      setErroSalvar(e instanceof Error ? e.message : "Falha desconhecida ao salvar.");
     } finally {
       setSalvandoManual(false);
     }
@@ -523,21 +556,37 @@ export function Editor({ project }: { project: Project }) {
   // intacta e ainda marcada como "não salva". Antes, o location.reload()
   // jogava tudo isso fora sempre que você adicionava algo sem ter salvado
   // primeiro — daí a sensação de "perder a alteração".
+  // Todos os handlers abaixo mostram um erro explícito (em vez de falhar
+  // calado) se a chamada ao servidor der errado — ex.: a página ficou
+  // aberta numa aba antiga referenciando um slide/camada que já não existe
+  // mais no banco (mudou por outro lado). Sem isso, a ação parecia ter
+  // funcionado na hora (o estado local mudava) mas nunca persistia de
+  // verdade, e o "sumiço" só era percebido bem depois.
   async function handleAddSlide() {
-    const novo = await addSlideAction(project.id);
-    setSlides((prev) => [...prev, novo as Slide]);
-    setSlideId(novo.id);
-    setLayerId(undefined);
+    try {
+      const novo = await addSlideAction(project.id);
+      setSlides((prev) => [...prev, novo as Slide]);
+      setSlideId(novo.id);
+      setLayerId(undefined);
+    } catch (e) {
+      setErroSalvar("Não deu pra criar o slide: " + (e instanceof Error ? e.message : "erro desconhecido") + ". Recarregue a página.");
+    }
   }
 
   async function handleDeleteSlide(id: string) {
     if (!confirm("Excluir este slide?")) return;
+    const anterior = slides;
     setSlides((prev) => prev.filter((s) => s.id !== id));
     if (slideId === id) {
       setSlideId(undefined);
       setLayerId(undefined);
     }
-    await deleteSlideAction(project.id, id);
+    try {
+      await deleteSlideAction(project.id, id);
+    } catch (e) {
+      setSlides(anterior); // desfaz a remoção otimista — não excluiu de verdade
+      setErroSalvar("Não deu pra excluir o slide: " + (e instanceof Error ? e.message : "erro desconhecido") + ". Recarregue a página.");
+    }
   }
 
   async function handleToggleSlideHidden(id: string) {
@@ -545,19 +594,28 @@ export function Editor({ project }: { project: Project }) {
     if (!alvo) return;
     const hidden = !alvo.hidden;
     setSlides((prev) => prev.map((s) => (s.id === id ? { ...s, hidden } : s)));
-    await toggleSlideHiddenAction(project.id, id, hidden);
+    try {
+      await toggleSlideHiddenAction(project.id, id, hidden);
+    } catch (e) {
+      setSlides((prev) => prev.map((s) => (s.id === id ? { ...s, hidden: !hidden } : s))); // desfaz
+      setErroSalvar("Não deu pra ocultar/mostrar o slide: " + (e instanceof Error ? e.message : "erro desconhecido") + ". Recarregue a página.");
+    }
   }
 
   async function handleDuplicateSlide(id: string) {
-    const copia = await duplicateSlideAction(project.id, id);
-    setSlides((prev) => {
-      const idx = prev.findIndex((s) => s.id === id);
-      const semGaps = prev.map((s) => (s.order > (prev[idx]?.order ?? -1) ? { ...s, order: s.order + 1 } : s));
-      const comCopia = [...semGaps.slice(0, idx + 1), copia as Slide, ...semGaps.slice(idx + 1)];
-      return comCopia;
-    });
-    setSlideId(copia.id);
-    setLayerId(undefined);
+    try {
+      const copia = await duplicateSlideAction(project.id, id);
+      setSlides((prev) => {
+        const idx = prev.findIndex((s) => s.id === id);
+        const semGaps = prev.map((s) => (s.order > (prev[idx]?.order ?? -1) ? { ...s, order: s.order + 1 } : s));
+        const comCopia = [...semGaps.slice(0, idx + 1), copia as Slide, ...semGaps.slice(idx + 1)];
+        return comCopia;
+      });
+      setSlideId(copia.id);
+      setLayerId(undefined);
+    } catch (e) {
+      setErroSalvar("Não deu pra duplicar o slide: " + (e instanceof Error ? e.message : "erro desconhecido") + ". Recarregue a página.");
+    }
   }
 
   function handleReorderSlidesDragEnd(e: DragEndEvent) {
@@ -576,15 +634,25 @@ export function Editor({ project }: { project: Project }) {
 
   async function handleAddLayer(type: "TEXT" | "IMAGE" | "BUTTON") {
     if (!slideId) return;
-    const nova = await addLayerAction(project.id, slideId, type);
-    setSlides((prev) => prev.map((s) => (s.id !== slideId ? s : { ...s, layers: [...s.layers, nova as Layer] })));
-    setLayerId(nova.id);
+    try {
+      const nova = await addLayerAction(project.id, slideId, type);
+      setSlides((prev) => prev.map((s) => (s.id !== slideId ? s : { ...s, layers: [...s.layers, nova as Layer] })));
+      setLayerId(nova.id);
+    } catch (e) {
+      setErroSalvar("Não deu pra criar a camada: " + (e instanceof Error ? e.message : "erro desconhecido") + ". Recarregue a página.");
+    }
   }
 
   async function handleDeleteLayer(id: string) {
+    const anterior = slides;
     setSlides((prev) => prev.map((s) => (s.id !== slideId ? s : { ...s, layers: s.layers.filter((l) => l.id !== id) })));
     if (layerId === id) setLayerId(undefined);
-    await deleteLayerAction(project.id, id);
+    try {
+      await deleteLayerAction(project.id, id);
+    } catch (e) {
+      setSlides(anterior); // desfaz a remoção otimista — não excluiu de verdade
+      setErroSalvar("Não deu pra excluir a camada: " + (e instanceof Error ? e.message : "erro desconhecido") + ". Recarregue a página.");
+    }
   }
 
   function handleReorderDragEnd(e: DragEndEvent) {
@@ -724,6 +792,31 @@ export function Editor({ project }: { project: Project }) {
           {salvandoManual ? "Salvando…" : "💾 Salvar"}
         </button>
       </div>
+
+      {erroSalvar && (
+        <div
+          style={{
+            background: "#FDEAEA",
+            border: "1px solid var(--danger)",
+            color: "var(--danger)",
+            borderRadius: 10,
+            padding: "10px 14px",
+            fontSize: 13,
+            marginBottom: 14,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          <span style={{ flex: 1 }}>⚠ {erroSalvar}</span>
+          <button className="btn perigo pequeno" onClick={() => location.reload()}>
+            Recarregar
+          </button>
+          <button className="btn ghost pequeno" onClick={() => setErroSalvar(null)}>
+            Dispensar
+          </button>
+        </div>
+      )}
 
       <div className="editor">
         <div className="editor-col">
