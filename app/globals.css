@@ -95,9 +95,11 @@ th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx
 /* ---------- editor de slides ---------- */
 .editor{display:grid;grid-template-columns:220px 1fr 260px;gap:16px;height:calc(100vh - 140px);min-height:520px}
 .editor-col{background:var(--card);border:1px solid var(--borda);border-radius:14px;padding:14px;overflow-y:auto}
-.slide-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:9px;cursor:pointer;font-size:13px;margin-bottom:4px}
+.slide-item{display:flex;align-items:center;gap:4px;padding:8px 8px;border-radius:9px;cursor:pointer;font-size:13px;margin-bottom:4px}
+.slide-item button{font-size:12px}
 .slide-item.ativo{background:var(--turq-cl)}
 .slide-item:hover{background:var(--bg)}
+.slide-item > span:nth-child(2){flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .canvas-wrap{background:#dfe6ee;border-radius:14px;display:flex;align-items:safe center;justify-content:safe center;overflow:auto;padding:20px}
 .canvas{position:relative;background:#fff;box-shadow:0 0 0 1px var(--borda);overflow:hidden}
 .layer{position:absolute;cursor:move;border:1.5px dashed transparent;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;user-drag:none;touch-action:none}

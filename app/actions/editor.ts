@@ -25,6 +25,7 @@ export async function addSlideAction(projectId: string) {
     order: slide.order,
     duration: slide.duration,
     background: slide.background ? JSON.parse(slide.background) : null,
+    hidden: slide.hidden,
     layers: [],
   };
 }
@@ -33,6 +34,99 @@ export async function deleteSlideAction(projectId: string, slideId: string) {
   await requireSession();
   await prisma.slide.delete({ where: { id: slideId } });
   revalidatePath(`/admin/slides/${projectId}`);
+}
+
+/** Recebe a lista de IDs de slide na ordem visual desejada e grava o campo
+ * "order" de cada um de uma vez só. Usado pelo arrastar-e-soltar da lista
+ * de Slides (mesma ideia do reorderLayersAction, mas pros slides). */
+export async function reorderSlidesAction(projectId: string, orderedSlideIds: string[]) {
+  await requireSession();
+  await prisma.$transaction(
+    orderedSlideIds.map((id, i) => prisma.slide.update({ where: { id }, data: { order: i } }))
+  );
+  revalidatePath(`/admin/slides/${projectId}`);
+}
+
+/** Slide oculto continua existindo e editável no painel, mas some do
+ * carrossel publicado (ver filtro em app/vitrine/[slug]/page.tsx) — dá pra
+ * preparar um slide com calma ou pausar um sem perder o que já foi feito. */
+export async function toggleSlideHiddenAction(projectId: string, slideId: string, hidden: boolean) {
+  await requireSession();
+  await prisma.slide.update({ where: { id: slideId }, data: { hidden } });
+  revalidatePath(`/admin/slides/${projectId}`);
+}
+
+/** Duplica um slide inteiro (fundo, duração e todas as camadas, com o
+ * mesmo texto/posição/animação de cada uma) e insere a cópia logo depois
+ * do original na ordem — jeito rápido de criar uma variação de um slide
+ * que já ficou bom, sem recomeçar do zero. */
+export async function duplicateSlideAction(projectId: string, slideId: string) {
+  await requireSession();
+  const original = await prisma.slide.findUniqueOrThrow({
+    where: { id: slideId },
+    include: { layers: { orderBy: { order: "asc" } } },
+  });
+
+  // Abre espaço pra cópia entrar logo após o original: todo slide com
+  // order maior sobe uma casa.
+  await prisma.slide.updateMany({
+    where: { projectId, order: { gt: original.order } },
+    data: { order: { increment: 1 } },
+  });
+
+  const copia = await prisma.slide.create({
+    data: {
+      projectId,
+      order: original.order + 1,
+      duration: original.duration,
+      background: original.background,
+      hidden: original.hidden,
+      layers: {
+        create: original.layers.map((l) => ({
+          type: l.type,
+          order: l.order,
+          x: l.x,
+          y: l.y,
+          width: l.width,
+          height: l.height,
+          rotation: l.rotation,
+          content: l.content,
+          animationIn: l.animationIn,
+          animationOut: l.animationOut,
+          delayMs: l.delayMs,
+          durationMs: l.durationMs,
+          responsive: l.responsive,
+        })),
+      },
+    },
+    include: { layers: { orderBy: { order: "asc" } } },
+  });
+
+  revalidatePath(`/admin/slides/${projectId}`);
+
+  return {
+    id: copia.id,
+    order: copia.order,
+    duration: copia.duration,
+    background: copia.background ? JSON.parse(copia.background) : null,
+    hidden: copia.hidden,
+    layers: copia.layers.map((l) => ({
+      id: l.id,
+      type: l.type as "TEXT" | "IMAGE" | "BUTTON",
+      order: l.order,
+      x: l.x,
+      y: l.y,
+      width: l.width,
+      height: l.height,
+      rotation: l.rotation,
+      content: JSON.parse(l.content),
+      animationIn: l.animationIn,
+      animationOut: l.animationOut,
+      delayMs: l.delayMs,
+      durationMs: l.durationMs,
+      responsive: l.responsive ? JSON.parse(l.responsive) : {},
+    })),
+  };
 }
 
 export async function updateSlideBackgroundAction(projectId: string, slideId: string, background: { type: "color" | "image"; value: string }) {

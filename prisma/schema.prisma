@@ -51,6 +51,10 @@ model Slide {
   order      Int      @default(0)
   duration   Int      @default(5000) // ms visível antes de avançar
   background String?  // JSON string: { type: "color"|"image", value: string }
+  // Slide oculto continua existindo (e editável) no painel, mas não entra
+  // no carrossel publicado — útil pra preparar um slide com antecedência
+  // ou pausar um sem perder o trabalho já feito nele.
+  hidden     Boolean  @default(false)
   layers     Layer[]
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt

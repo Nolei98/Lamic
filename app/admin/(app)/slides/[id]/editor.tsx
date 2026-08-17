@@ -4,6 +4,9 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
   addSlideAction,
   deleteSlideAction,
+  reorderSlidesAction,
+  toggleSlideHiddenAction,
+  duplicateSlideAction,
   updateSlideBackgroundAction,
   updateSlideDurationAction,
   addLayerAction,
@@ -40,6 +43,7 @@ type Slide = {
   order: number;
   duration: number;
   background: { type: "color" | "image"; value: string } | null;
+  hidden: boolean;
   layers: Layer[];
 };
 
@@ -118,6 +122,75 @@ function CamadaItem({
       >
         ×
       </button>
+    </div>
+  );
+}
+
+function SlideItem({
+  slide,
+  indice,
+  ativo,
+  onSelect,
+  onToggleHidden,
+  onDuplicate,
+  onDelete,
+}: {
+  slide: Slide;
+  indice: number;
+  ativo: boolean;
+  onSelect: () => void;
+  onToggleHidden: () => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: slide.id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : slide.hidden ? 0.55 : 1,
+  };
+  return (
+    <div ref={setNodeRef} style={style} className={`slide-item ${ativo ? "ativo" : ""}`} onClick={onSelect}>
+      {/* só a alcinha inicia o arraste — o resto da linha fica livre pra clique normal */}
+      <span className="camada-arrasta" title="Arrastar pra reordenar" {...attributes} {...listeners}>
+        ⠿
+      </span>
+      <span>Slide {indice + 1}</span>
+      <span style={{ display: "flex", gap: 4, flex: "none" }}>
+        <button
+          className="btn ghost pequeno"
+          style={{ padding: "2px 5px" }}
+          title={slide.hidden ? "Slide oculto — mostrar no carrossel publicado" : "Ocultar do carrossel publicado (continua editável)"}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleHidden();
+          }}
+        >
+          {slide.hidden ? "🚫" : "👁"}
+        </button>
+        <button
+          className="btn ghost pequeno"
+          style={{ padding: "2px 5px" }}
+          title="Duplicar slide"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDuplicate();
+          }}
+        >
+          ⧉
+        </button>
+        <button
+          className="btn perigo pequeno"
+          style={{ padding: "2px 6px" }}
+          title="Excluir slide"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+        >
+          ×
+        </button>
+      </span>
     </div>
   );
 }
@@ -435,8 +508,13 @@ export function Editor({ project }: { project: Project }) {
     }
   }
 
+  // Deseleciona ao clicar em qualquer ponto da área de edição que não seja
+  // uma camada nem uma alça de redimensionar — inclui o fundo do canvas, a
+  // régua e o cinza ao redor (antes só desmarcava clicando exatamente no
+  // fundo do canvas; clicar na régua, por exemplo, não fazia nada).
   function onCanvasBackgroundClick(e: React.MouseEvent) {
-    if (e.target === e.currentTarget) setLayerId(undefined);
+    if ((e.target as HTMLElement).closest(".layer, .alca")) return;
+    setLayerId(undefined);
   }
 
   // Os quatro handlers abaixo NÃO recarregam a página — adicionar/excluir
@@ -460,6 +538,40 @@ export function Editor({ project }: { project: Project }) {
       setLayerId(undefined);
     }
     await deleteSlideAction(project.id, id);
+  }
+
+  async function handleToggleSlideHidden(id: string) {
+    const alvo = slides.find((s) => s.id === id);
+    if (!alvo) return;
+    const hidden = !alvo.hidden;
+    setSlides((prev) => prev.map((s) => (s.id === id ? { ...s, hidden } : s)));
+    await toggleSlideHiddenAction(project.id, id, hidden);
+  }
+
+  async function handleDuplicateSlide(id: string) {
+    const copia = await duplicateSlideAction(project.id, id);
+    setSlides((prev) => {
+      const idx = prev.findIndex((s) => s.id === id);
+      const semGaps = prev.map((s) => (s.order > (prev[idx]?.order ?? -1) ? { ...s, order: s.order + 1 } : s));
+      const comCopia = [...semGaps.slice(0, idx + 1), copia as Slide, ...semGaps.slice(idx + 1)];
+      return comCopia;
+    });
+    setSlideId(copia.id);
+    setLayerId(undefined);
+  }
+
+  function handleReorderSlidesDragEnd(e: DragEndEvent) {
+    if (!e.over || e.active.id === e.over.id) return;
+    const ordenados = [...slides].sort((a, b) => a.order - b.order);
+    const oldIndex = ordenados.findIndex((s) => s.id === e.active.id);
+    const newIndex = ordenados.findIndex((s) => s.id === e.over!.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const reordenados = arrayMove(ordenados, oldIndex, newIndex);
+
+    // atualiza o "order" localmente pra refletir na hora, e persiste no banco
+    const orderById = new Map(reordenados.map((s, i) => [s.id, i]));
+    setSlides((prev) => prev.map((s) => ({ ...s, order: orderById.get(s.id) ?? s.order })));
+    startTransition(() => reorderSlidesAction(project.id, reordenados.map((s) => s.id)));
   }
 
   async function handleAddLayer(type: "TEXT" | "IMAGE" | "BUTTON") {
@@ -523,28 +635,38 @@ export function Editor({ project }: { project: Project }) {
     return `Imagem com ${naturalWidth}px de largura — ideal pelo menos ${minimo}px pra não borrar em telas grandes.`;
   }
 
+  // Ordem visual real (o array "slides" em si não é reordenado ao
+  // arrastar — só o campo "order" muda — e slide oculto não entra no
+  // carrossel publicado, então a prévia também pula ele, pra mostrar
+  // fielmente o que vai aparecer no site.
+  const slidesPublicados = useMemo(
+    () => [...slides].filter((s) => !s.hidden).sort((a, b) => a.order - b.order),
+    [slides]
+  );
+
   function togglePlay() {
     if (playing) {
       setPlaying(false);
       if (playTimer.current) clearTimeout(playTimer.current);
       return;
     }
+    if (slidesPublicados.length === 0) return;
     setPlaying(true);
     setPlayIndex(0);
   }
 
   useMemo(() => {
     if (!playing) return;
-    const current = slides[playIndex];
+    const current = slidesPublicados[playIndex];
     if (!current) return;
     if (playTimer.current) clearTimeout(playTimer.current);
     playTimer.current = setTimeout(() => {
-      setPlayIndex((i) => (i + 1) % slides.length);
+      setPlayIndex((i) => (i + 1) % slidesPublicados.length);
     }, current.duration);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playing, playIndex]);
+  }, [playing, playIndex, slidesPublicados]);
 
-  const slideAtualExibida = playing ? slides[playIndex] : slide;
+  const slideAtualExibida = playing ? slidesPublicados[playIndex] : slide;
   const stepX = niceStep(scale);
   const marksX = Array.from({ length: Math.floor(canvasSize.width / stepX) + 1 }, (_, i) => i * stepX);
   const marksY = Array.from({ length: Math.floor(canvasSize.height / stepX) + 1 }, (_, i) => i * stepX);
@@ -606,29 +728,31 @@ export function Editor({ project }: { project: Project }) {
       <div className="editor">
         <div className="editor-col">
           <b style={{ fontSize: 12.5, textTransform: "uppercase", color: "var(--txt-2)" }}>Slides</b>
+          <p style={{ fontSize: 11.5, color: "var(--txt-2)", margin: "4px 0 8px" }}>
+            Arraste pra reordenar. Slide oculto (🚫) some do carrossel publicado, mas continua aqui pra editar.
+          </p>
           <div style={{ marginTop: 10 }}>
-            {slides.map((s, i) => (
-              <div
-                key={s.id}
-                className={`slide-item ${s.id === slideId ? "ativo" : ""}`}
-                onClick={() => {
-                  setSlideId(s.id);
-                  setLayerId(undefined);
-                }}
-              >
-                <span>Slide {i + 1}</span>
-                <button
-                  className="btn perigo pequeno"
-                  style={{ padding: "2px 8px" }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteSlide(s.id);
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-            ))}
+            <DndContext id="dnd-slides" sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleReorderSlidesDragEnd}>
+              <SortableContext items={[...slides].sort((a, b) => a.order - b.order).map((s) => s.id)} strategy={verticalListSortingStrategy}>
+                {[...slides]
+                  .sort((a, b) => a.order - b.order)
+                  .map((s, i) => (
+                    <SlideItem
+                      key={s.id}
+                      slide={s}
+                      indice={i}
+                      ativo={s.id === slideId}
+                      onSelect={() => {
+                        setSlideId(s.id);
+                        setLayerId(undefined);
+                      }}
+                      onToggleHidden={() => handleToggleSlideHidden(s.id)}
+                      onDuplicate={() => handleDuplicateSlide(s.id)}
+                      onDelete={() => handleDeleteSlide(s.id)}
+                    />
+                  ))}
+              </SortableContext>
+            </DndContext>
           </div>
           <button className="btn pequeno" style={{ marginTop: 10, width: "100%" }} onClick={handleAddSlide}>
             + Slide
@@ -777,7 +901,7 @@ export function Editor({ project }: { project: Project }) {
                   <span className="camada-icone">▢</span>
                   <span className="camada-nome">Fundo do slide</span>
                 </div>
-                <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleReorderDragEnd}>
+                <DndContext id="dnd-camadas" sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleReorderDragEnd}>
                   <SortableContext
                     items={[...slide.layers].sort((a, b) => b.order - a.order).map((l) => l.id)}
                     strategy={verticalListSortingStrategy}
@@ -840,7 +964,15 @@ export function Editor({ project }: { project: Project }) {
                     style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
                   />
                 )}
-                {slideAtualExibida?.layers.map((l) => {
+                {/* Renderiza na ordem de empilhamento real (menor "order" = fundo,
+                    maior = frente — mesma convenção do painel de Camadas ao
+                    lado). Sem esse sort aqui, arrastar uma camada pra cima/
+                    baixo na lista mudava o valor de "order" mas o canvas
+                    continuava desenhando na ordem antiga do array, então o
+                    que ficava visualmente por cima não batia com o que a
+                    lista mostrava — inclusive pra saber em qual camada um
+                    clique deveria realmente cair. */}
+                {[...(slideAtualExibida?.layers ?? [])].sort((a, b) => a.order - b.order).map((l) => {
                   const r = resolveLayerForDevice(l, l.responsive, playing ? "desktop" : device, playing ? 1 : deviceRatio, playing ? 0 : yOffset);
                   if (r.hidden) return null;
                   return (
@@ -919,24 +1051,55 @@ export function Editor({ project }: { project: Project }) {
                   );
                 })}
 
-                {guias && !playing && device === "desktop" && (
-                  <>
-                    {/* Menu (rail) fixo do site — não colocar texto/botão importante embaixo dele */}
-                    <div className="guia-site" style={{ left: 0, top: 0, width: 140 * scale, height: 340 * scale }}>
-                      <span>Menu do site</span>
-                    </div>
-                    {/* Selo circular "Cartão LAMIC VIVA+" que fica preso no canto (canvas 1240x600) */}
-                    <div className="guia-site" style={{ left: 958 * scale, top: 460 * scale, width: 172 * scale, height: 172 * scale, borderRadius: "50%" }}>
-                      <span>Selo Viva+</span>
-                    </div>
-                    {/* Bolinhas de navegação do carrossel — centralizadas embaixo */}
-                    <div
-                      className="guia-site"
-                      style={{ left: (canvasSize.width / 2 - 70) * scale, top: (canvasSize.height - 64) * scale, width: 140 * scale, height: 40 * scale, borderColor: "#E8862A" }}
-                    >
-                      <span>Navegação (bolinhas)</span>
-                    </div>
-                  </>
+                {/* Guias do site: mostram onde ficam o menu, o selo Viva+ e as
+                    bolinhas de navegação POR CIMA do banner, pra não colocar
+                    texto/botão importante embaixo. No desktop o site usa um
+                    menu lateral fixo (rail); a partir do notebook/tablet
+                    (<=960px de verdade no site) esse menu vira uma barra
+                    horizontal no topo com um botão de hambúrguer — por isso
+                    as guias de notebook/tablet e celular usam um layout
+                    diferente do desktop, não é só a mesma guia encolhida. */}
+                {guias && !playing && (
+                  device === "desktop" ? (
+                    <>
+                      {/* Menu (rail) fixo do site — não colocar texto/botão importante embaixo dele */}
+                      <div className="guia-site" style={{ left: 0, top: 0, width: 140 * scale, height: 340 * scale }}>
+                        <span>Menu do site</span>
+                      </div>
+                      {/* Selo circular "Cartão LAMIC VIVA+" que fica preso no canto (canvas 1240x600) */}
+                      <div className="guia-site" style={{ left: 958 * scale, top: 460 * scale, width: 172 * scale, height: 172 * scale, borderRadius: "50%" }}>
+                        <span>Selo Viva+</span>
+                      </div>
+                      {/* Bolinhas de navegação do carrossel — centralizadas embaixo */}
+                      <div
+                        className="guia-site"
+                        style={{ left: (canvasSize.width / 2 - 70) * scale, top: (canvasSize.height - 64) * scale, width: 140 * scale, height: 40 * scale, borderColor: "#E8862A" }}
+                      >
+                        <span>Navegação (bolinhas)</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Barra de menu horizontal (com hambúrguer) no topo — largura toda */}
+                      <div className="guia-site" style={{ left: 0, top: 0, width: canvasSize.width * scale, height: 64 * scale }}>
+                        <span>Menu do site (barra + hambúrguer)</span>
+                      </div>
+                      {/* Selo Viva+ fica menor e mais pro canto nesses tamanhos */}
+                      <div
+                        className="guia-site"
+                        style={{ left: (canvasSize.width - 150) * scale, top: (canvasSize.height - 100) * scale, width: 130 * scale, height: 130 * scale, borderRadius: "50%" }}
+                      >
+                        <span>Selo Viva+</span>
+                      </div>
+                      {/* Bolinhas de navegação — continuam centralizadas embaixo */}
+                      <div
+                        className="guia-site"
+                        style={{ left: (canvasSize.width / 2 - 60) * scale, top: (canvasSize.height - 50) * scale, width: 120 * scale, height: 32 * scale, borderColor: "#E8862A" }}
+                      >
+                        <span>Navegação (bolinhas)</span>
+                      </div>
+                    </>
+                  )
                 )}
               </div>
             </div>

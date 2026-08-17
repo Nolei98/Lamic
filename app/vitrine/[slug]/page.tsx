@@ -18,7 +18,9 @@ export default async function VitrinePage({
 
   const parsed = {
     ...project,
-    slides: project.slides.map((s) => ({
+    // Slide oculto continua salvo/editável no painel, mas não aparece no
+    // carrossel publicado.
+    slides: project.slides.filter((s) => !s.hidden).map((s) => ({
       ...s,
       background: s.background ? JSON.parse(s.background) : null,
       layers: s.layers.map((l) => ({
