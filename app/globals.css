@@ -123,6 +123,7 @@ th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx
 .alca-e{right:-12px;top:50%;transform:translateY(-50%);cursor:ew-resize}
 .campo-inline{display:flex;gap:8px}
 .campo-inline > *{flex:1}
+kbd{background:var(--bg);border:1px solid var(--borda);border-radius:4px;padding:1px 5px;font:11px var(--sans);color:var(--txt-2)}
 
 /* ---------- painel de camadas (ordem de empilhamento) ---------- */
 .camadas-lista{border:1px solid var(--borda);border-radius:10px;overflow:hidden}

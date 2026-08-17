@@ -11,6 +11,7 @@ import {
   updateSlideDurationAction,
   addLayerAction,
   deleteLayerAction,
+  duplicateLayerAction,
   updateLayerAction,
   updateLayerResponsiveAction,
   reorderLayersAction,
@@ -238,6 +239,12 @@ export function Editor({ project }: { project: Project }) {
   const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragNodeRef = useRef<HTMLDivElement | null>(null);
+  // "Área de transferência" da camada copiada (Ctrl+C) — só o id, guardado
+  // em memória (não sobrevive a um recarregar de página, igual o
+  // clipboard do sistema operacional não é usado aqui). Colar (Ctrl+V)
+  // busca o dado atual dessa camada no servidor na hora, então funciona
+  // mesmo colando num slide diferente do que foi copiado.
+  const clipboardLayerId = useRef<string | null>(null);
 
   const canvasSize = deviceCanvasSize(device, project.width, project.height);
   const deviceRatio = deviceScaleRatio(device, project.width);
@@ -654,6 +661,63 @@ export function Editor({ project }: { project: Project }) {
       setErroSalvar("Não deu pra excluir a camada: " + (e instanceof Error ? e.message : "erro desconhecido") + ". Recarregue a página.");
     }
   }
+
+  async function handlePasteLayer() {
+    const sourceId = clipboardLayerId.current;
+    if (!sourceId || !slideId) return;
+    try {
+      const nova = await duplicateLayerAction(project.id, sourceId, slideId);
+      setSlides((prev) => prev.map((s) => (s.id !== slideId ? s : { ...s, layers: [...s.layers, nova as Layer] })));
+      setLayerId(nova.id);
+    } catch (e) {
+      setErroSalvar(
+        "Não deu pra colar a camada (talvez ela tenha sido excluída): " +
+          (e instanceof Error ? e.message : "erro desconhecido") +
+          "."
+      );
+    }
+  }
+
+  // Delete/Backspace exclui a camada selecionada; Ctrl/Cmd+C copia;
+  // Ctrl/Cmd+V cola no slide atual (dá pra colar num slide diferente do
+  // que copiou). Ignora tudo isso quando o foco está num campo de texto,
+  // pra não atrapalhar excluir/copiar/colar texto normalmente nos campos
+  // do painel de Propriedades.
+  useEffect(() => {
+    function estaEditandoTexto() {
+      const el = document.activeElement as HTMLElement | null;
+      if (!el) return false;
+      const tag = el.tagName;
+      return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
+    }
+
+    function onKeyDown(e: KeyboardEvent) {
+      // e.repeat: segurar a tecla (ou o próprio SO/ferramenta repetindo o
+      // keydown) não pode colar/excluir várias vezes — só a primeira
+      // pressionada conta.
+      if (e.repeat || estaEditandoTexto() || playing) return;
+      const ctrlOuCmd = e.ctrlKey || e.metaKey;
+
+      if ((e.key === "Delete" || e.key === "Backspace") && layerId) {
+        e.preventDefault();
+        handleDeleteLayer(layerId);
+        return;
+      }
+      if (ctrlOuCmd && e.key.toLowerCase() === "c" && layerId) {
+        e.preventDefault();
+        clipboardLayerId.current = layerId;
+        return;
+      }
+      if (ctrlOuCmd && e.key.toLowerCase() === "v" && clipboardLayerId.current) {
+        e.preventDefault();
+        handlePasteLayer();
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layerId, slideId, playing]);
 
   function handleReorderDragEnd(e: DragEndEvent) {
     if (!slide || !e.over || e.active.id === e.over.id) return;
@@ -1202,7 +1266,14 @@ export function Editor({ project }: { project: Project }) {
         <div className="editor-col">
           <b style={{ fontSize: 12.5, textTransform: "uppercase", color: "var(--txt-2)" }}>Propriedades</b>
           {!layer || !layerBase ? (
-            <p style={{ fontSize: 13, color: "var(--txt-2)", marginTop: 10 }}>Selecione uma camada no canvas.</p>
+            <p style={{ fontSize: 13, color: "var(--txt-2)", marginTop: 10 }}>
+              Selecione uma camada no canvas.
+              <br />
+              <span style={{ fontSize: 11.5 }}>
+                Com uma camada selecionada: <kbd>Delete</kbd> exclui, <kbd>Ctrl+C</kbd>/<kbd>Ctrl+V</kbd> copia e cola
+                (também entre slides diferentes).
+              </span>
+            </p>
           ) : (
             <div className="form" style={{ marginTop: 10 }}>
               {device !== "desktop" && (

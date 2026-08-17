@@ -204,6 +204,57 @@ export async function addLayerAction(
   };
 }
 
+/** Copia uma camada (de qualquer slide do projeto) pra dentro do slide de
+ * destino — usado pelo Ctrl+C/Ctrl+V do editor. Aceita colar no mesmo
+ * slide (cria uma cópia deslocada, pra não ficar exatamente em cima da
+ * original) ou em outro slide do mesmo projeto. */
+export async function duplicateLayerAction(projectId: string, sourceLayerId: string, targetSlideId: string) {
+  await requireSession();
+  const original = await prisma.layer.findUniqueOrThrow({ where: { id: sourceLayerId } });
+  const count = await prisma.layer.count({ where: { slideId: targetSlideId } });
+  const mesmoSlide = original.slideId === targetSlideId;
+
+  const layer = await prisma.layer.create({
+    data: {
+      slideId: targetSlideId,
+      type: original.type,
+      order: count,
+      // Deslocada um pouco quando cola no mesmo slide, pra não nascer
+      // exatamente em cima da original (ficaria invisível, parecendo que
+      // colar não fez nada). Colando em outro slide, mantém a posição.
+      x: mesmoSlide ? original.x + 24 : original.x,
+      y: mesmoSlide ? original.y + 24 : original.y,
+      width: original.width,
+      height: original.height,
+      rotation: original.rotation,
+      content: original.content,
+      animationIn: original.animationIn,
+      animationOut: original.animationOut,
+      delayMs: original.delayMs,
+      durationMs: original.durationMs,
+      responsive: original.responsive,
+    },
+  });
+  revalidatePath(`/admin/slides/${projectId}`);
+
+  return {
+    id: layer.id,
+    type: layer.type as "TEXT" | "IMAGE" | "BUTTON",
+    order: layer.order,
+    x: layer.x,
+    y: layer.y,
+    width: layer.width,
+    height: layer.height,
+    rotation: layer.rotation,
+    content: JSON.parse(layer.content),
+    animationIn: layer.animationIn,
+    animationOut: layer.animationOut,
+    delayMs: layer.delayMs,
+    durationMs: layer.durationMs,
+    responsive: layer.responsive ? JSON.parse(layer.responsive) : {},
+  };
+}
+
 export async function deleteLayerAction(projectId: string, layerId: string) {
   await requireSession();
   const layer = await prisma.layer.findUniqueOrThrow({ where: { id: layerId } });
