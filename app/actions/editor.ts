@@ -13,10 +13,20 @@ async function requireSession() {
 export async function addSlideAction(projectId: string) {
   await requireSession();
   const count = await prisma.slide.count({ where: { projectId } });
-  await prisma.slide.create({
+  const slide = await prisma.slide.create({
     data: { projectId, order: count, background: JSON.stringify({ type: "color", value: "#123C74" }) },
   });
   revalidatePath(`/admin/slides/${projectId}`);
+  // Devolve o slide recém-criado pro editor poder inserir direto no estado
+  // local (sem recarregar a página, o que perderia qualquer edição pendente
+  // ainda não salva em outro slide/camada).
+  return {
+    id: slide.id,
+    order: slide.order,
+    duration: slide.duration,
+    background: slide.background ? JSON.parse(slide.background) : null,
+    layers: [],
+  };
 }
 
 export async function deleteSlideAction(projectId: string, slideId: string) {
@@ -67,7 +77,7 @@ export async function addLayerAction(
         }
       : { src: "", alt: "", fit: "contain" };
 
-  await prisma.layer.create({
+  const layer = await prisma.layer.create({
     data: {
       slideId,
       type,
@@ -80,6 +90,24 @@ export async function addLayerAction(
     },
   });
   revalidatePath(`/admin/slides/${projectId}`);
+  // Mesma ideia do addSlideAction: devolve a camada criada pro editor
+  // encaixar no estado local em vez de recarregar a página inteira.
+  return {
+    id: layer.id,
+    type: layer.type as "TEXT" | "IMAGE" | "BUTTON",
+    order: layer.order,
+    x: layer.x,
+    y: layer.y,
+    width: layer.width,
+    height: layer.height,
+    rotation: layer.rotation,
+    content,
+    animationIn: layer.animationIn,
+    animationOut: layer.animationOut,
+    delayMs: layer.delayMs,
+    durationMs: layer.durationMs,
+    responsive: {},
+  };
 }
 
 export async function deleteLayerAction(projectId: string, layerId: string) {

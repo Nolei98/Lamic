@@ -439,26 +439,40 @@ export function Editor({ project }: { project: Project }) {
     if (e.target === e.currentTarget) setLayerId(undefined);
   }
 
+  // Os quatro handlers abaixo NÃO recarregam a página — adicionar/excluir
+  // slide ou camada só encosta no estado local (igual todo o resto do
+  // editor), então qualquer edição pendente em outro slide/camada continua
+  // intacta e ainda marcada como "não salva". Antes, o location.reload()
+  // jogava tudo isso fora sempre que você adicionava algo sem ter salvado
+  // primeiro — daí a sensação de "perder a alteração".
   async function handleAddSlide() {
-    await addSlideAction(project.id);
-    location.reload();
+    const novo = await addSlideAction(project.id);
+    setSlides((prev) => [...prev, novo as Slide]);
+    setSlideId(novo.id);
+    setLayerId(undefined);
   }
 
   async function handleDeleteSlide(id: string) {
     if (!confirm("Excluir este slide?")) return;
+    setSlides((prev) => prev.filter((s) => s.id !== id));
+    if (slideId === id) {
+      setSlideId(undefined);
+      setLayerId(undefined);
+    }
     await deleteSlideAction(project.id, id);
-    location.reload();
   }
 
   async function handleAddLayer(type: "TEXT" | "IMAGE" | "BUTTON") {
     if (!slideId) return;
-    await addLayerAction(project.id, slideId, type);
-    location.reload();
+    const nova = await addLayerAction(project.id, slideId, type);
+    setSlides((prev) => prev.map((s) => (s.id !== slideId ? s : { ...s, layers: [...s.layers, nova as Layer] })));
+    setLayerId(nova.id);
   }
 
   async function handleDeleteLayer(id: string) {
+    setSlides((prev) => prev.map((s) => (s.id !== slideId ? s : { ...s, layers: s.layers.filter((l) => l.id !== id) })));
+    if (layerId === id) setLayerId(undefined);
     await deleteLayerAction(project.id, id);
-    location.reload();
   }
 
   function handleReorderDragEnd(e: DragEndEvent) {
