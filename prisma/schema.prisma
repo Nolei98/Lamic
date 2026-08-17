@@ -1,19 +1,20 @@
-// Banco local (SQLite) para desenvolvimento. Quando as credenciais da
-// Hostgator estiverem prontas, troque o datasource abaixo para:
-//   provider = "mysql"
-//   url      = env("DATABASE_URL")   // mysql://usuario:senha@host:3306/banco
-// e rode `npm run db:push` de novo — o schema é o mesmo.
+// Banco em produção: Postgres hospedado no Supabase. DATABASE_URL usa o
+// pooler (pgbouncer, porta 6543) para as queries da aplicação; DIRECT_URL
+// usa a porta 5432 (sem pooler) e é o que o Prisma Migrate precisa para
+// rodar migrations. As duas apontam pro mesmo banco, só muda a porta/modo.
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 generator client {
   provider = "prisma-client-js"
 }
 
-// SQLite não suporta enum nativo no Prisma — "role" e "type" (do Layer)
-// abaixo são String com os valores validados no código da aplicação.
+// "role" e "type" (do Layer) abaixo continuam String (em vez de enum
+// nativo do Postgres) pra manter compatibilidade com o schema que já
+// rodava em SQLite — validados no código da aplicação.
 // ADMIN | EDITOR
 model User {
   id           String   @id @default(cuid())

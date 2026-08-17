@@ -1,15 +1,15 @@
-import { SignJWT, jwtVerify } from "jose";
+// Funções que só rodam em contexto Node (server actions, route handlers) —
+// usam next/headers, que não é seguro pro Edge Runtime do middleware.
+// A parte compartilhada com o middleware (verificação de token) mora em
+// lib/session.ts.
+import { SignJWT } from "jose";
 import { cookies } from "next/headers";
+import { SESSION_COOKIE_NAME as COOKIE_NAME, verifySessionToken, type SessionPayload } from "@/lib/session";
 
-const COOKIE_NAME = "lamic_session";
 const secret = () => new TextEncoder().encode(process.env.SESSION_SECRET);
 
-export type SessionPayload = {
-  userId: string;
-  email: string;
-  name: string;
-  role: string;
-};
+export type { SessionPayload };
+export { verifySessionToken };
 
 export async function createSessionCookie(payload: SessionPayload) {
   const token = await new SignJWT({ ...payload })
@@ -34,21 +34,7 @@ export function clearSessionCookie() {
 export async function getSession(): Promise<SessionPayload | null> {
   const token = cookies().get(COOKIE_NAME)?.value;
   if (!token) return null;
-  try {
-    const { payload } = await jwtVerify(token, secret());
-    return payload as unknown as SessionPayload;
-  } catch {
-    return null;
-  }
-}
-
-export async function verifySessionToken(token: string): Promise<SessionPayload | null> {
-  try {
-    const { payload } = await jwtVerify(token, secret());
-    return payload as unknown as SessionPayload;
-  } catch {
-    return null;
-  }
+  return verifySessionToken(token);
 }
 
 export const SESSION_COOKIE_NAME = COOKIE_NAME;
