@@ -1,0 +1,93 @@
+// Banco local (SQLite) para desenvolvimento. Quando as credenciais da
+// Hostgator estiverem prontas, troque o datasource abaixo para:
+//   provider = "mysql"
+//   url      = env("DATABASE_URL")   // mysql://usuario:senha@host:3306/banco
+// e rode `npm run db:push` de novo — o schema é o mesmo.
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// SQLite não suporta enum nativo no Prisma — "role" e "type" (do Layer)
+// abaixo são String com os valores validados no código da aplicação.
+// ADMIN | EDITOR
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String   @default("ADMIN")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  projects     Project[]
+}
+
+// Um "Project" é um carrossel/slider/banner (equivalente a um "Slider" no
+// Slider Revolution). Cada projeto tem várias Slides, cada Slide tem várias
+// Layers (camadas: texto, imagem, forma).
+model Project {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  width     Int      @default(1200)
+  height    Int      @default(500)
+  published Boolean  @default(false)
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id])
+  slides    Slide[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Slide {
+  id         String   @id @default(cuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  order      Int      @default(0)
+  duration   Int      @default(5000) // ms visível antes de avançar
+  background String?  // JSON string: { type: "color"|"image", value: string }
+  layers     Layer[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Layer {
+  id            String    @id @default(cuid())
+  slideId       String
+  slide         Slide     @relation(fields: [slideId], references: [id], onDelete: Cascade)
+  type          String    // TEXT | IMAGE | SHAPE
+  order         Int       @default(0)
+  x             Float     @default(40)
+  y             Float     @default(40)
+  width         Float     @default(300)
+  height        Float     @default(80)
+  rotation      Float     @default(0)
+  content       String    // JSON string: texto+fonte+cor OU src da imagem, conforme o type
+  animationIn   String    @default("fade")   // fade | slide-left | slide-right | slide-up | zoom
+  animationOut  String    @default("fade")
+  delayMs       Int       @default(0)
+  durationMs    Int       @default(600)
+  // JSON string: overrides por dispositivo, ex:
+  // { "tablet": { "x":10,"y":10,"width":200,"height":40,"hidden":false },
+  //   "mobile": { "hidden": true } }
+  // Campos não informados no override herdam o valor "desktop" (colunas acima).
+  responsive    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// Métricas de SEO/marketing (Search Console, Analytics, Google Ads...).
+// Por enquanto alimentado manualmente ou por importação; integração via
+// API do Google é o próximo passo, exigindo OAuth do lado do usuário.
+model MetricSnapshot {
+  id        String   @id @default(cuid())
+  source    String   // "search_console" | "analytics" | "google_ads" | "manual"
+  metric    String   // ex: "cliques", "impressoes", "sessoes", "conversoes"
+  value     Float
+  date      DateTime
+  createdAt DateTime @default(now())
+}

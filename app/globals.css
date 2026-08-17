@@ -1,0 +1,214 @@
+:root{
+  --navy:#0E2E5A;
+  --navy-2:#123C74;
+  --azul:#1257A5;
+  --azul-cl:#2E7DC7;
+  --turq:#2AA7BE;
+  --turq-cl:#8FD3E0;
+  --txt:#1E2B3A;
+  --txt-2:#5C6B7C;
+  --borda:#E2E9F1;
+  --bg:#F4F7FB;
+  --card:#FFFFFF;
+  --danger:#C0392B;
+  --ok:#1E8E5A;
+  --sans:'Segoe UI',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{padding:0;margin:0}
+body{font:15px/1.5 var(--sans);color:var(--txt);background:var(--bg)}
+a{color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
+
+.admin-shell{display:flex;min-height:100vh}
+
+/* menu lateral agora é uma gaveta (drawer): fica fechado, só abre ao clicar
+   no botão ☰. Isso libera a tela inteira pro editor de slides. */
+.nav-toggle{
+  position:fixed;top:16px;left:16px;z-index:40;width:38px;height:38px;border-radius:10px;
+  background:var(--navy);color:#fff;border:none;cursor:pointer;display:grid;place-items:center;
+  box-shadow:0 6px 16px -6px rgba(14,46,90,.5)
+}
+.nav-toggle:hover{background:var(--navy-2)}
+.nav-backdrop{position:fixed;inset:0;background:rgba(10,20,35,.35);z-index:44}
+.admin-nav{
+  position:fixed;top:0;left:0;bottom:0;width:230px;flex:none;background:var(--navy);color:#fff;
+  padding:20px 14px;display:flex;flex-direction:column;gap:4px;z-index:45;
+  transform:translateX(-100%);transition:transform .2s ease;box-shadow:0 0 40px rgba(0,0,0,.25)
+}
+.admin-nav.aberto{transform:translateX(0)}
+.admin-nav .marca{font:800 18px/1 var(--sans);padding:8px 10px 20px;letter-spacing:.02em;display:flex;align-items:center;justify-content:space-between}
+.nav-fechar{background:transparent;border:none;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0 4px}
+.admin-nav a{display:block;padding:10px 12px;border-radius:10px;color:rgba(255,255,255,.82);text-decoration:none;font-size:14px}
+.admin-nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.admin-nav a.ativo{background:var(--turq);color:#04262d;font-weight:700}
+.admin-nav form{margin-top:auto}
+.admin-nav .sair{width:100%;text-align:left;background:transparent;border:1px solid rgba(255,255,255,.25);cursor:pointer}
+.admin-main{flex:1;padding:28px 34px 28px 66px;max-width:100%;overflow-x:auto}
+.admin-topo{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.admin-topo h1{font-size:22px;margin:0}
+.admin-topo .quem{font-size:13px;color:var(--txt-2)}
+
+.card{background:var(--card);border:1px solid var(--borda);border-radius:14px;padding:20px}
+.hero-slides{
+  display:flex;align-items:center;justify-content:space-between;gap:24px;
+  background:linear-gradient(135deg,var(--navy) 0%,var(--azul) 60%,var(--turq) 130%);
+  color:#fff;border-radius:18px;padding:28px 32px;margin-bottom:20px;text-decoration:none;
+  box-shadow:0 16px 34px -18px rgba(14,46,90,.55);transition:.2s
+}
+.hero-slides:hover{transform:translateY(-2px)}
+.hero-slides .tag{font:700 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;background:rgba(255,255,255,.16);padding:4px 10px;border-radius:999px}
+.hero-slides h2{margin:10px 0 6px;font-size:26px}
+.hero-slides p{margin:0;max-width:52ch;color:rgba(255,255,255,.85);font-size:14px}
+.hero-slides .cta-inline{display:inline-block;margin-top:14px;font-weight:700;font-size:13.5px}
+.hero-slides-stats{display:flex;gap:22px;flex:none}
+.hero-slides-stats b{display:block;font-size:30px}
+.hero-slides-stats span{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.75)}
+
+.grid-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+.stat b{display:block;font-size:26px;color:var(--navy)}
+.stat span{font-size:12.5px;color:var(--txt-2);text-transform:uppercase;letter-spacing:.06em}
+
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--borda)}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-2)}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:999px;background:var(--azul);color:#fff;border:none;cursor:pointer;font-weight:600;font-size:13.5px;text-decoration:none}
+.btn:hover{background:var(--navy)}
+.btn.ghost{background:transparent;color:var(--navy);border:1.5px solid var(--borda)}
+.btn.perigo{background:var(--danger)}
+.btn.pequeno{padding:6px 12px;font-size:12.5px}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+
+.form label{display:block;font-size:12.5px;font-weight:600;color:var(--txt-2);margin:14px 0 5px}
+.form input,.form select,.form textarea{width:100%;padding:10px 12px;border:1.5px solid var(--borda);border-radius:9px;background:#fff}
+.form input:focus,.form select:focus,.form textarea:focus{outline:2px solid var(--turq-cl);border-color:var(--turq)}
+
+.erro{background:#FDECEA;border:1px solid #F5C6C0;color:var(--danger);padding:10px 14px;border-radius:9px;font-size:13.5px;margin-bottom:14px}
+.aviso-ok{background:#E7F6EE;border:1px solid #BCE6D0;color:var(--ok);padding:10px 14px;border-radius:9px;font-size:13.5px;margin-bottom:14px}
+
+.login-wrap{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,var(--navy) 0%,var(--azul) 100%)}
+.login-card{width:100%;max-width:380px;background:#fff;border-radius:18px;padding:34px 30px;box-shadow:0 30px 60px -20px rgba(0,0,0,.4)}
+.login-card h1{font-size:20px;margin:0 0 4px}
+.login-card p{font-size:13.5px;color:var(--txt-2);margin:0 0 20px}
+
+/* ---------- editor de slides ---------- */
+.editor{display:grid;grid-template-columns:220px 1fr 260px;gap:16px;height:calc(100vh - 140px);min-height:520px}
+.editor-col{background:var(--card);border:1px solid var(--borda);border-radius:14px;padding:14px;overflow-y:auto}
+.slide-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:9px;cursor:pointer;font-size:13px;margin-bottom:4px}
+.slide-item.ativo{background:var(--turq-cl)}
+.slide-item:hover{background:var(--bg)}
+.canvas-wrap{background:#dfe6ee;border-radius:14px;display:flex;align-items:safe center;justify-content:safe center;overflow:auto;padding:20px}
+.canvas{position:relative;background:#fff;box-shadow:0 0 0 1px var(--borda);overflow:hidden}
+.layer{position:absolute;cursor:move;border:1.5px dashed transparent;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;user-drag:none;touch-action:none}
+.layer.selecionada{border-color:var(--turq)}
+.layer .txt-layer{white-space:pre-wrap}
+.layer img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;-webkit-user-drag:none;user-drag:none}
+
+/* ---------- alças de redimensionar ---------- */
+/* a área clicável (24x24) é bem maior que o quadradinho visível (11x11) —
+   com o mouse de verdade é bem mais fácil de acertar do que o ponto exato
+   do desenho. O ::after é só o desenho; o .alca inteiro é a zona de clique. */
+.alca{position:absolute;width:24px;height:24px;z-index:5;display:grid;place-items:center}
+.alca::after{content:"";width:11px;height:11px;background:#fff;border:2px solid var(--turq);border-radius:3px;pointer-events:none}
+.alca-nw{left:-12px;top:-12px;cursor:nwse-resize}
+.alca-ne{right:-12px;top:-12px;cursor:nesw-resize}
+.alca-sw{left:-12px;bottom:-12px;cursor:nesw-resize}
+.alca-se{right:-12px;bottom:-12px;cursor:nwse-resize}
+.alca-n{left:50%;top:-12px;transform:translateX(-50%);cursor:ns-resize}
+.alca-s{left:50%;bottom:-12px;transform:translateX(-50%);cursor:ns-resize}
+.alca-w{left:-12px;top:50%;transform:translateY(-50%);cursor:ew-resize}
+.alca-e{right:-12px;top:50%;transform:translateY(-50%);cursor:ew-resize}
+.campo-inline{display:flex;gap:8px}
+.campo-inline > *{flex:1}
+
+/* ---------- painel de camadas (ordem de empilhamento) ---------- */
+.camadas-lista{border:1px solid var(--borda);border-radius:10px;overflow:hidden}
+.camada-item{
+  display:flex;align-items:center;gap:8px;padding:7px 9px;font-size:12.5px;cursor:pointer;
+  border-bottom:1px solid var(--borda);background:#fff
+}
+.camada-item:last-child{border-bottom:none}
+.camada-item:hover{background:var(--bg)}
+.camada-item.ativo{background:var(--turq-cl)}
+.camada-icone{width:20px;text-align:center;flex:none;color:var(--txt-2);font:700 11px var(--sans)}
+.camada-nome{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.camada-acoes{display:flex;gap:2px;flex:none}
+.camada-acoes button{border:none;background:transparent;cursor:pointer;font-size:10px;color:var(--txt-2);padding:2px 4px;border-radius:4px}
+.camada-acoes button:hover:not(:disabled){background:#fff;color:var(--navy)}
+.camada-acoes button:disabled{opacity:.3;cursor:not-allowed}
+.camada-fundo{cursor:default;background:var(--bg);color:var(--txt-2);font-style:italic}
+.camada-fundo:hover{background:var(--bg)}
+.camada-arrasta{cursor:grab;flex:none;color:var(--txt-2);padding:0 2px;touch-action:none}
+.camada-arrasta:active{cursor:grabbing}
+.camada-excluir{
+  flex:none;border:none;background:transparent;color:var(--txt-2);cursor:pointer;
+  font-size:15px;line-height:1;padding:2px 4px;border-radius:4px
+}
+.camada-excluir:hover{background:#fff;color:var(--danger)}
+
+/* ---------- guias do site real por cima do canvas (menu, busca, viva+...) ---------- */
+.guia-site{
+  position:absolute;pointer-events:none;z-index:20;
+  border:2px dashed #C0392B;background:rgba(192,57,43,.08);
+  display:flex;align-items:flex-start;justify-content:flex-start;overflow:hidden
+}
+.guia-corte-fundo{position:absolute;border:2px dashed #C0392B;background:rgba(192,57,43,.12);pointer-events:none}
+
+/* padrão quadriculado clássico de "área transparente/fora da resolução real"
+   (mesma linguagem visual do editor de referência) */
+.fundo-quadriculado{
+  background-image:
+    linear-gradient(45deg,#cfd6de 25%,transparent 25%),
+    linear-gradient(-45deg,#cfd6de 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#cfd6de 75%),
+    linear-gradient(-45deg,transparent 75%,#cfd6de 75%);
+  background-size:16px 16px;
+  background-position:0 0,0 8px,8px -8px,-8px 0;
+  background-color:#e8ecf1;
+}
+.guia-site span{
+  background:#C0392B;color:#fff;font:700 10px var(--sans);letter-spacing:.02em;
+  padding:2px 6px;border-bottom-right-radius:6px;white-space:nowrap
+}
+
+/* ---------- indicador de salvamento automático ---------- */
+.indicador-salvo{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ok)}
+.indicador-salvo.salvando{color:#B8791A}
+.indicador-salvo .ponto{width:7px;height:7px;border-radius:50%;background:#E8A317;animation:pulsarPonto 1s ease-in-out infinite}
+@keyframes pulsarPonto{0%,100%{opacity:.3}50%{opacity:1}}
+
+/* ---------- animações de entrada das camadas (editor + vitrine pública) ---------- */
+@keyframes lamicFade{from{opacity:0}to{opacity:1}}
+@keyframes lamicSlideLeft{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:translateX(0)}}
+@keyframes lamicSlideRight{from{opacity:0;transform:translateX(-50px)}to{opacity:1;transform:translateX(0)}}
+@keyframes lamicSlideUp{from{opacity:0;transform:translateY(36px)}to{opacity:1;transform:translateY(0)}}
+@keyframes lamicZoom{from{opacity:0;transform:scale(.82)}to{opacity:1;transform:scale(1)}}
+
+.anim-fade{animation:lamicFade var(--dur,600ms) ease var(--delay,0ms) both}
+.anim-slide-left{animation:lamicSlideLeft var(--dur,600ms) ease var(--delay,0ms) both}
+.anim-slide-right{animation:lamicSlideRight var(--dur,600ms) ease var(--delay,0ms) both}
+.anim-slide-up{animation:lamicSlideUp var(--dur,600ms) ease var(--delay,0ms) both}
+.anim-zoom{animation:lamicZoom var(--dur,600ms) ease var(--delay,0ms) both}
+
+/* ---------- player público (vitrine) ---------- */
+.vitrine-wrap{position:relative;width:100%;overflow:hidden;background:#000;margin:0 auto}
+.vitrine-slide{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .5s ease}
+.vitrine-slide.on{opacity:1;pointer-events:auto}
+.vitrine-layer{position:absolute}
+.vitrine-layer img{width:100%;height:100%;object-fit:contain;display:block}
+
+/* ---------- setas + bolinhas de navegação do carrossel público ---------- */
+.vitrine-controles{position:absolute;z-index:8;display:flex;align-items:center;gap:22px}
+.vitrine-dots{display:flex;gap:9px;align-items:center}
+.vitrine-dots button{width:11px;height:11px;padding:0;border:0;border-radius:50%;cursor:pointer;background:rgba(255,255,255,.4);transition:.2s}
+.vitrine-dots button.on{background:var(--turq);width:28px;border-radius:99px}
+.vitrine-setas{display:flex;gap:10px}
+.vitrine-setas button{
+  width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1.5px solid rgba(255,255,255,.34);background:rgba(9,28,56,.34);
+  color:#fff;display:grid;place-items:center;transition:.2s;backdrop-filter:blur(4px)
+}
+.vitrine-setas button:hover{background:var(--turq);border-color:var(--turq)}
+.vitrine-botao{background:var(--bg);transition:background .2s ease}
+.vitrine-botao:hover{background:var(--bg-hover)}
