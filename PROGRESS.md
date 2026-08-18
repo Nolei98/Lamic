@@ -6,155 +6,202 @@
 
 ## Status geral
 
-- **Nada foi commitado ainda.** Tudo abaixo está só no working tree local.
-  Último commit real: `7fd4602 feat: importa dados reais do site
-  laboratoriolamic.com.br` (só o site estático, sem o painel/admin).
-- Repositório remoto: `https://github.com/Nolei98/Lamic.git` (branch `main`).
-- Deploy de referência (protegido por login Vercel, não acessível
-  diretamente): `lamic-i60ldq3ge-nolei98s-projects.vercel.app`.
+- **Tudo commitado e em produção.** Branch `main`, remoto
+  `https://github.com/Nolei98/Lamic.git`, sincronizada com `origin/main`
+  (working tree limpa no fim desta sessão).
+- **Produção:** `https://lamic-three.vercel.app` — site institucional +
+  painel `/admin` funcionando, banco em Postgres (Supabase).
+- **Deploy:** normalmente automático via push no GitHub → Vercel. Em algum
+  momento desta sessão o GitHub teve uma instabilidade e os pushes não
+  disparavam deploy; nesse caso usei `vercel deploy --prod` (Vercel CLI, já
+  logado como `nolei98`) direto da máquina. Se algo parecido acontecer de
+  novo, essa é a saída.
+
+## ⚠️ Aviso importante: local e produção usam o MESMO banco
+
+`vercel pull --environment production` (rodado nesta sessão pra linkar o
+projeto) criou um `.env.local` que faz o `npm run dev` local ler as MESMAS
+`DATABASE_URL`/`DIRECT_URL` de produção (Supabase). **Não existe banco de
+desenvolvimento separado.** Qualquer edição feita em `localhost:3000`
+grava direto no site real.
+
+Isso já causou um incidente nesta sessão: uma camada de título do banner
+da home foi apagada de verdade (provavelmente por uma aba antiga do
+painel ainda aberta, com estado desatualizado, insistindo em salvar por
+cima). Tive que restaurar manualmente via script direto no banco. Se for
+mexer bastante ou testar coisas arriscadas, considere:
+- Criar um projeto Supabase separado só pra dev (era uma pergunta em
+  aberto — o usuário ainda não decidiu se quer isso), **ou**
+- Sempre testar mudanças novas num **projeto de banner descartável**
+  dentro do próprio painel (criar → testar → apagar) em vez de editar o
+  "Banner Home — Vacinas" real, **ou**
+- Garantir que só uma aba/janela do painel fique aberta por vez.
 
 ## O que é este projeto
 
-Site institucional do Laboratório LAMIC (`public/*.html`, estático) +
-um painel administrativo em Next.js (`/admin`) com um motor de
-slides/banners próprio (parecido com o Slider Revolution, mas construído do
-zero) que substitui o hero fixo da home por um carrossel editável.
+Site institucional do Laboratório LAMIC (`public/*.html`, estático) + um
+painel administrativo em Next.js (`/admin`) com um motor de
+slides/banners próprio (parecido com o Slider Revolution, mas construído
+do zero) que substitui o hero fixo da home por um carrossel editável.
 
-- **Stack:** Next.js 14 (App Router) + TypeScript + Prisma + SQLite (local,
-  `prisma/dev.db`) + `@dnd-kit` (arrastar camadas na lista).
+- **Stack:** Next.js 14 (App Router) + TypeScript + Prisma + **Postgres
+  (Supabase, projeto `lamic-admin`, região São Paulo/`sa-east-1`)** +
+  `@dnd-kit` (arrastar slides e camadas).
 - **Rodar local:** `npm run dev` → `http://localhost:3000` (porta 3000
-  fixa). Se travar/gerar lag depois de muitas edições, reiniciar o servidor
-  do zero costuma resolver (`Get-Process node | Stop-Process -Force` antes).
+  fixa). Lembrar do aviso acima — é o banco de produção.
 - **Login do painel:** `/admin/login` — e-mail `noleirodrigues@gmail.com`,
-  senha em `.env` (`ADMIN_PASSWORD`). Sem cadastro público — usuários novos
-  só são criados de dentro do painel (`/admin/usuarios`).
+  senha em `ADMIN_PASSWORD` (`.env` local e nas env vars da Vercel).
 - **Projeto do banner da home:** "Banner Home — Vacinas", slug
-  `banner-home-vacinas`, id `cmsvpkl1w0001dj5ajcs5ecf2`, publicado. A home
-  (`public/index.html`) embute ele via `<iframe src="/vitrine/banner-home-vacinas?embed=1">`
-  no lugar do hero antigo.
+  `banner-home-vacinas`, projeto id `cmsxcgni20001rain617j2rrz` (mudou de
+  id depois de um `seed-hero.ts` rodado nesta sessão — não é mais
+  `cmsvpkl1w0001dj5ajcs5ecf2`), publicado. A home (`public/index.html`)
+  embute ele via `<iframe src="/vitrine/banner-home-vacinas?embed=1">`.
+- **Script de restauração:** `scripts/seed-hero.ts` recria os 3 slides
+  reais do banner da home do zero (apaga e recria — só rodar se o
+  conteúdo real estiver corrompido/perdido, como aconteceu uma vez nesta
+  sessão).
 
 ## Arquitetura do motor de slides
 
 - `lib/breakpoints.ts` — tamanhos de tela e a matemática de posição
-  responsiva. **Valores reais**, extraídos da configuração de verdade do
-  Slider Revolution do site oficial (`laboratoriolamic.com.br`, achado
-  inspecionando o HTML/JS deles):
-  - Desktop: **1240×600** (tamanho nativo do projeto)
-  - Notebook/Tablet: **1024×600**
-  - Celular: **480×720** (retrato — o valor certo depois de uma correção,
-    tinha saído largura/altura trocadas numa tentativa anterior)
-- Sem ajuste manual pra um dispositivo, a camada herda a posição do
-  desktop **encolhida proporcionalmente** (`deviceScaleRatio`) e
-  **centralizada verticalmente** (`deviceYOffset`) — nunca vaza pra fora do
-  quadro.
+  responsiva (Desktop = tamanho nativo do projeto; Notebook/Tablet
+  1024×600; Celular 480×720).
 - `app/admin/(app)/slides/[id]/editor.tsx` — o editor. Componente grande,
-  tudo num arquivo só por enquanto.
+  tudo num arquivo só.
 - `app/vitrine/[slug]/player.tsx` — o player público (dentro do iframe).
-  Modo `?embed=1` = preenche 100% do iframe, sem moldura. A escala no modo
-  embed vem da **altura** do iframe (`window.innerHeight`), não da largura
-  — porque o site oficial trava a altura em 600px (720 no celular) e só
-  deixa a largura esticar. Ver `.hero-embed{height:600px}` no
-  `public/assets/estilo.css` (era `aspect-ratio`, foi trocado por altura
-  fixa pra bater exatamente com o site real).
-- `app/actions/editor.ts` — server actions (criar/editar/excluir
-  slide/camada, reordenar).
-
-## Decisões de produto tomadas nesta sessão
-
-- **Salvamento manual.** Nada mais salva sozinho a cada mudança — só ao
-  clicar em "💾 Salvar" no topo do editor (indicador "Alterações não
-  salvas"/"✓ Tudo salvo"). Motivo: autosave em cada clique causava lag e
-  corrida entre gravações. Ações **estruturais** (criar/excluir
-  slide/camada, reordenar) continuam imediatas — não esperam o Salvar. Isso
-  ficou combinado assim mas nunca foi confirmado explicitamente pelo
-  usuário; se perguntar de novo, é bom confirmar se faz sentido.
-- **Barra de busca não fica mais em cima do banner** — só o menu (rail) e o
-  cartão "LAMIC VIVA+" continuam sobrepostos. Removida a margem negativa
-  que puxava a busca pra cima do hero (`public/assets/estilo.css`, classe
-  `.busca`).
-- **Navegação do carrossel público**: só bolinhas, centralizadas embaixo do
-  banner. As setas de próximo/anterior foram removidas (ficavam "em cima"
-  do conteúdo do slide, o usuário achou melhor sem elas).
-- **Fundo do slide**: sempre `object-fit:cover`, preenche o quadro inteiro
-  (nunca aparece "quadriculado" fora dele — isso só existe na PRÉVIA do
-  editor, pra mostrar quanto da foto original é cortado).
+  Modo `?embed=1`: o `.vitrine-wrap` ocupa 100% da largura do iframe (pro
+  fundo preencher telas largas), e as camadas ficam num
+  `.vitrine-conteudo` interno com largura fixa e centralizado — só o
+  fundo estica, o conteúdo não.
+- `app/actions/editor.ts` — server actions (criar/editar/excluir/duplicar/
+  reordenar/ocultar slide e camada).
+- `middleware.ts` + `lib/session.ts` — autenticação do painel. A
+  verificação de sessão roda no Edge Runtime e por isso é feita à mão com
+  Web Crypto (`crypto.subtle`), **sem** a lib `jose` (ver histórico de
+  bugs abaixo pro motivo). `lib/auth.ts` tem as funções que só rodam em
+  contexto Node (usam `next/headers`) — criar/ler/limpar cookie de sessão.
 
 ## Recursos do editor já implementados
 
-- Canvas com zoom 100% (tamanho real, padrão) ou "Ajustar à tela".
-- Régua de medidas (topo + lateral esquerda).
-- Camadas: Texto, Imagem, Botão (com gradiente + cor de hover configurável
-  + link com opção de abrir em nova aba).
-- Arrastar e redimensionar direto no canvas — **mexe direto no DOM durante
-  o movimento** (sem re-render do React a cada pixel) pra não travar;
-  só sincroniza com o React/servidor ao soltar o mouse.
-- Painel de Camadas com ordem de empilhamento (arrastar pra reordenar via
-  `@dnd-kit`), exceção: "Fundo do slide" sempre aparece primeiro na lista
-  mas renderiza atrás de tudo no canvas.
+- Canvas com zoom 100% ou "Ajustar à tela"; régua de medidas.
+- Camadas: Texto, Imagem, Botão (gradiente + cor de hover + link com
+  opção de nova aba).
+- Arrastar e redimensionar direto no canvas (mexe no DOM durante o
+  movimento, só sincroniza com o React/servidor ao soltar o mouse).
+- Painel de Camadas com ordem de empilhamento via `@dnd-kit` — o canvas
+  agora **renderiza na mesma ordem** que a lista mostra (bug corrigido
+  nesta sessão, ver histórico).
+- **Slides**: reordenar (arrastar), ocultar/mostrar (some do carrossel
+  publicado mas continua editável), duplicar (clona fundo + todas as
+  camadas, insere logo depois do original).
+- **Atalhos de teclado** (com uma camada selecionada, foco fora de campo
+  de texto): `Delete`/`Backspace` exclui; `Ctrl+C`/`Ctrl+V` copia e cola
+  (inclusive entre slides diferentes; colar no mesmo slide desloca
+  +24px pra não nascer em cima da original).
 - Responsivo por dispositivo (Desktop/Notebook-Tablet/Celular) com
   sobrescrita manual de posição/tamanho por camada.
-- "🗺 Guias do site" — mostra por cima do canvas onde ficam o menu, o selo
-  Viva+ e a navegação do slide reais do site (só no modo Desktop).
-- Aviso de qualidade de imagem: se a foto enviada for pequena demais pro
-  tamanho que vai ocupar (< 1.6× de folga), mostra um alerta.
-- Prévia do fundo mostra a foto inteira + a área realmente visível marcada
-  (accounting pro corte do `object-fit:cover`).
-- Aviso antes de sair da página com alteração não salva (`beforeunload`).
+- "🗺 Guias do site" — mostra onde ficam o menu, o selo Viva+ e a
+  navegação reais do site, com layout próprio pra Desktop (menu lateral)
+  e pra Notebook/Tablet/Celular (barra horizontal + hambúrguer).
+- Aviso de qualidade de imagem (< 1.6× de folga pro tamanho que vai
+  ocupar).
+- Salvamento manual (botão "💾 Salvar", indicador "Alterações não
+  salvas"/"✓ Tudo salvo") — ações estruturais (criar/excluir/duplicar/
+  ocultar/reordenar slide ou camada) persistem na hora; edições de
+  propriedade (posição, texto, cor...) só ao clicar Salvar.
+- **Erros de salvamento não são mais silenciosos**: se algo falhar ao
+  salvar (ex.: referenciar um registro que não existe mais no banco),
+  aparece um aviso vermelho explícito com botão "Recarregar", em vez de
+  simplesmente não persistir sem avisar.
 
-## Bugs encontrados e corrigidos nesta sessão (histórico, não repetir)
+## Bugs encontrados e corrigidos (histórico completo, não repetir)
 
-1. Clique numa alça de redimensionar sendo "roubado" pela lógica de
-   "priorizar camada selecionada" → corrigido ignorando cliques em `.alca`.
-2. Arrastar/redimensionar "travando" (só atualizava a posição ao soltar o
-   mouse) → causa real: `e.currentTarget` não confiável quando o
-   `onLayerMouseDown` era invocado indiretamente pelo caminho de clique
-   "prioridade da camada selecionada". Corrigido buscando o elemento via
-   `data-layer-id` (atributo fixo no DOM) em vez de `currentTarget`.
-2b. **Ainda pendente** (relatado, não resolvido): se a camada selecionada
-   está *atrás* de outra na pilha, as alças dela podem ficar visualmente
-   cobertas pela camada da frente, e o clique nunca chega até a alça (vai
-   pra camada da frente). Ideia de solução: renderizar as alças da camada
-   selecionada num overlay separado, sempre por cima de tudo (fora do loop
-   normal de camadas), só pra fins de clique — sem mudar a ordem visual
-   real.
-3. Excluir camada bagunçando a ordem das outras → o campo `order` podia
-   colidir depois de um delete no meio da lista; corrigido renumerando
-   (0..n-1) a cada exclusão.
-4. Corte arredondado do banner vazando um quadrado atrás da curva →
-   `.hero-embed` tinha `background` sólido atrás do iframe recortado;
-   removido (deixado transparente).
-5. Guia de corte do fundo (prévia no editor) desalinhada → a miniatura
-   usava uma caixa com proporção diferente da foto, causando um "encaixe
-   dentro de encaixe". Corrigido fazendo a caixa da miniatura usar a mesma
-   proporção (`aspect-ratio`) da foto original.
-6. Ícone de seta dos cards de serviço girando pro lado errado no hover →
-   sentido da rotação estava invertido (`-45deg` → `45deg`).
-7. Tag `</main>` duplicada em `public/index.html` (bug antigo, achado por
-   acaso ao mexer na seção do formulário de contato).
+### Sessão de deploy/infra
+1. Build da Vercel falhava (`prisma generate` não rodava — cache de
+   `node_modules`) → `postinstall`/`build` script rodando `prisma
+   generate` explicitamente.
+2. **Causa raiz de vários bugs de runtime**: o projeto na Vercel foi
+   criado originalmente pro site estático e ficou com **Framework Preset
+   = "Other"**, não "Next.js", em Project Settings → Build and
+   Development. Isso fazia o build empacotar o middleware errado,
+   puxando `ua-parser-js` interno do Next (via `next/server`) e
+   referenciando `__dirname`, inexistente no Edge Runtime →
+   `ReferenceError: __dirname is not defined`, `MIDDLEWARE_INVOCATION_FAILED`
+   em qualquer rota `/admin/*`. Corrigido trocando o preset pra
+   "Next.js". Isolado testando com um middleware vazio antes de achar a
+   causa real — vale lembrar esse método se algo parecido acontecer de
+   novo (bug reproduzível mesmo sem código nenhum nosso = configuração
+   do projeto, não código).
+3. Middleware usava `jose` (JWT) — funcionava local mas o build da
+   Vercel especificamente resolvia o pacote errado (build node em vez de
+   edge/browser) e quebrava em runtime. Trocado por verificação HS256
+   manual com Web Crypto nativa (`lib/session.ts`), eliminando a
+   dependência externa nesse caminho.
+4. Import `@/lib/session` no middleware (alias TS) → trocado por import
+   relativo (`./lib/session`) depois que o checker de Edge Function da
+   Vercel reclamou do specifier antes de resolver o alias.
+5. Banco era SQLite local (`prisma/dev.db`) — migrado pra Postgres
+   (Supabase), criado projeto novo via browser, `db push` + seeds rodados
+   contra o banco real.
+
+### Sessão do editor
+6. `location.reload()` depois de criar/excluir slide ou camada jogava
+   fora qualquer edição pendente ainda não salva → trocado por
+   atualização de estado local (igual todo o resto do editor já fazia).
+7. Fundo do banner embutido (iframe da home) não preenchia telas mais
+   largas que o design nativo (~1200px) — `.vitrine-wrap` tinha largura
+   fixa em vez de 100%. Corrigido separando fundo (estica) de conteúdo
+   (`.vitrine-conteudo`, largura fixa e centralizado).
+8. Canvas do editor renderizava camadas na ordem antiga do array em vez
+   da ordem de empilhamento (`order`) — depois de reordenar pela lista, o
+   que ficava visualmente na frente não batia com o que a lista mostrava,
+   e cliques em áreas sobrepostas caíam na camada errada. Corrigido
+   ordenando por `order` antes de renderizar.
+9. Clique fora de qualquer camada só desmarcava a seleção clicando
+   exatamente no fundo do canvas (`target === currentTarget`) — clicar na
+   régua ou no cinza ao redor não fazia nada. Trocado por
+   `closest('.layer, .alca')`.
+10. Adicionar um segundo `DndContext` (pras slides, além do já existente
+    pras camadas) causava mismatch de hidratação do React
+    (`aria-describedby` do dnd-kit gerado diferente no servidor e no
+    cliente) por falta de `id` estável — corrigido com
+    `id="dnd-slides"`/`id="dnd-camadas"`.
+11. `salvarTudo` usava `Promise.all` — um item falhando derrubava o lote
+    inteiro **sem avisar** (o botão só parava de dizer "Salvando…", nada
+    persistia, e não tinha erro visível). Foi exatamente esse o bug que
+    causou o incidente de dado perdido (ver aviso no topo). Trocado por
+    `Promise.allSettled` + aviso explícito de erro; todos os handlers de
+    criar/excluir/ocultar/duplicar têm try/catch com reversão da
+    atualização otimista em caso de falha.
+12. Testando atalho de colar (Ctrl+V) via automação: colava 2 cópias em
+    vez de 1 — o navegador dispara `keydown` com `repeat:true` ao segurar
+    a tecla. Corrigido ignorando eventos repetidos.
 
 ## Pendências conhecidas (ainda não implementadas)
 
-- **Atalhos de teclado**: Ctrl+Z (desfazer), Delete (excluir camada
-  selecionada), Ctrl+C/Ctrl+V (copiar/colar camada). Pedido explicitamente,
-  ainda não entrei nisso. Se implementar, escopo sugerido: Delete e
-  Ctrl+C/V são baratos (ver seção 2b acima também, mesmo contexto de
-  seleção); Ctrl+Z é mais trabalhoso — sugestão é limitar a desfazer só
-  edições de propriedade (posição/tamanho/texto/cor) via uma pilha de
-  snapshots do estado local, não tentar desfazer ações estruturais
-  (criar/excluir slide/camada), que já são imediatas no servidor.
-- **Fix 2b acima** (alças cobertas por camada da frente).
-- Responsivo do banner da home ainda não tem ajustes manuais finos por
-  camada em Tablet/Celular — herda o encolhimento automático. Pode precisar
-  de retoque depois de ver como fica na prática.
-- Qualidade de imagem: implementado só o aviso (texto). Não há nenhum
-  redimensionamento/otimização automática de imagem — depende do usuário
-  enviar fotos em resolução alta o bastante (o aviso ajuda, mas não força).
+- **Ctrl+Z (desfazer)**: não implementado. Se entrar nisso, sugestão é
+  limitar a desfazer só edições de propriedade (posição/tamanho/texto/
+  cor) via pilha de snapshots do estado local — não tentar desfazer ações
+  estruturais (criar/excluir slide/camada), que já são imediatas no
+  servidor.
+- Alças de redimensionar de uma camada selecionada que está *atrás* de
+  outra na pilha podem ficar visualmente cobertas — o clique não chega
+  até a alça. Não confirmado se ainda reproduz depois do fix #8 acima
+  (que mudou a ordem de renderização); revisar se voltar a acontecer.
+- Responsivo do banner da home ainda sem ajustes manuais finos por
+  camada em Tablet/Celular — herda o encolhimento automático.
+- Qualidade de imagem: só o aviso (texto), sem redimensionamento/
+  otimização automática.
+- **Banco de dev separado**: ainda não decidido/feito (ver aviso no
+  topo). Perguntar ao usuário se quer resolver isso antes de mexer mais
+  no painel.
 
-## Próximo passo sugerido
+## Créditos/config úteis
 
-Revisar tudo visualmente com calma (o usuário ainda não confirmou "está
-pronto pra commitar"), decidir se entra nas pendências acima, e só então
-fazer o primeiro commit de todo o painel/motor de slides — vai ser um
-commit grande (dezenas de arquivos novos: `app/`, `lib/`, `prisma/`,
-`middleware.ts`, configs). Confirmar com o usuário antes de dar `git push`,
-como já vem sendo feito nesta sessão.
+- Supabase: projeto `lamic-admin`, ref `orzyufoyomfvhssmrtvw`, região
+  `sa-east-1` (São Paulo). Connection strings em `.env`
+  (`DATABASE_URL` = pooler porta 6543, `DIRECT_URL` = direta porta 5432).
+- Vercel: projeto `lamic`, org `nolei98s-projects`. CLI já linkado nesta
+  máquina (`vercel link` rodado, `.vercel/project.json` presente).
+- `.env.example` documenta todas as variáveis necessárias pra rodar do
+  zero em outra máquina.
